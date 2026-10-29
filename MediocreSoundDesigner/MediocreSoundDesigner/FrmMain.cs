@@ -227,7 +227,7 @@ public partial class FrmMain : Form
 
     private void trkDrawTimescale_Scroll(object sender, EventArgs e)
     {
-        trackManager.DrawTimescale = trkDrawTimescale.Maximum - trkDrawTimescale.Value;
+        trackManager.DrawTimescale = Math.Max(1, trkDrawTimescale.Maximum - trkDrawTimescale.Value);
         trackManager.RedrawAll();
     }
 
