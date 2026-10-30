@@ -9,7 +9,7 @@ public partial class FrmEditSettings : FrmEditMaster {
   public FrmEditSettings() {
     InitializeComponent();
   }
-
+  /// <inheritdoc/>
   protected override void Init() {
     base.Init();
     btnColorWinBg.BackColor = Settings.Color.WinBg;

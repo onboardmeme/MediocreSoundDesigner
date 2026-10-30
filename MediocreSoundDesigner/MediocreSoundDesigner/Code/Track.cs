@@ -44,19 +44,28 @@ public class Track : IDisposable {
   private Panel panContainer;
   private int drawTimescale;
 
-  // properties
-  public int DrawOffset { get; set; }
+    // properties
+    /// <summary>
+    /// Offset for how far the track is shifted over to the right in pixels
+    /// </summary>
+    public int DrawOffset { get; set; }
+  /// <summary>
+  /// Wether or not the track is currently muted
+  /// </summary>
+  public bool IsDisabled { get; private set; }
 
-    /// <summary>
-    /// Wether or not the track is currently muted
-    /// </summary>
-    public bool IsDisabled { get; private set; }
+  /// <summary>
+  /// Panel that the waveforms of the track are drawn on.
+  /// </summary>
   public Panel PanDrawSamples { get; private set; }
-    /// <summary>
-    /// Represents how loud the sample is
-    /// </summary>
-    public float Volume { get; private set; }
+  /// <summary>
+  /// Represents how loud the sample is
+  /// </summary>
+  public float Volume { get; private set; }
   private string tempFilePath => Path.Combine(Path.GetTempPath(), "MediocreSoundDesigner", "temp.wav");
+  /// <summary>
+  /// Wether the track is playing or not
+  /// </summary>
   public PlaybackState State => outputDevice?.PlaybackState ?? PlaybackState.Stopped;
 
     // ctor
@@ -106,9 +115,17 @@ public class Track : IDisposable {
   }
 
   // edits
+  /// <summary>
+  /// Creates a copy of the track
+  /// </summary>
+  /// <returns>The clone of the sample</returns>
   public float[] CloneSamples() {
     return (float[])samples.Clone();
   }
+  /// <summary>
+  /// Replaces all of the samples with new samples
+  /// </summary>
+  /// <param name="samples">The new track sample</param>
   public void ReplaceSamples(float[] samples) {
     this.samples = samples;
   }
@@ -135,6 +152,10 @@ public class Track : IDisposable {
     /// </summary>
     public void Trim() {
   }
+    /// <summary>
+    /// Changing the tracks speed
+    /// </summary>
+    /// <param name="scale">The speed scale on the track</param>
   public void AlterTimeScale(float scale) {
   }
     /// <summary>
@@ -224,6 +245,10 @@ public class Track : IDisposable {
     /// </summary>
     public void Reset() {
   }
+  /// <summary>
+  /// Grabs the playhead position
+  /// </summary>
+  /// <returns>The playhead position as the number of samples</returns>
   public int GetPlayheadPos() {
     return (int)((outputDevice?.GetPosition() ?? 0) / 4);
   }
@@ -248,6 +273,10 @@ public class Track : IDisposable {
     using var writer = new WaveFileWriter(path, fileReader?.WaveFormat ?? WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
     writer.WriteSamples(GetAdjustedSamples(), 0, samples.Length);
   }
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <returns></returns>
   public float[] GetAdjustedSamples() {
     float[] adjSamples = new float[samples.Length];
     for (int s = 0; s < samples.Length; s++) {
@@ -262,10 +291,19 @@ public class Track : IDisposable {
   }
 
   // render
+  /// <summary>
+  /// Moves the sample
+  /// </summary>
+  /// <param name="amount">The amount moved</param>
   public void ShiftSampleOver(int amount) {
     DrawOffset += amount;
     DrawOffset = Math.Max(0, DrawOffset);
   }
+  /// <summary>
+  /// Draws the strack's waveform onto its panel
+  /// </summary>
+  /// <param name="g">Graphics surface to draw on.</param>
+  /// <param name="drawTimescale">How far along the sample is</param>
   public void DrawSamples(Graphics g, int drawTimescale) {
     if (PanDrawSamples is null) {
       return;

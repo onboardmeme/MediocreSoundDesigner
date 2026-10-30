@@ -1,6 +1,6 @@
 ﻿namespace MediocreSoundDesigner;
 /// <summary>
-/// 
+/// Base class for edit dialogs that holds tracks and button options.
 /// </summary>
 public partial class FrmEditMaster : Form {
   // fields
@@ -36,7 +36,7 @@ public partial class FrmEditMaster : Form {
     ForeColor = Settings.Color.WinFg;
   }
   /// <summary>
-  /// Cancels and closes
+  /// Cancels and closes the dialog box
   /// </summary>
   /// <param name="sender"></param>
   /// <param name="e"></param>
@@ -45,7 +45,11 @@ public partial class FrmEditMaster : Form {
     DialogResult = DialogResult.Cancel;
     Close();
   }
-
+  /// <summary>
+  /// Applies the setting and closes the dialog box
+  /// </summary>
+  /// <param name="sender"></param>
+  /// <param name="e"></param>
   public void btnApply_Click(object sender, EventArgs e) {
     Apply();
     track?.PanDrawSamples?.Invalidate();
@@ -55,12 +59,15 @@ public partial class FrmEditMaster : Form {
 
   // override in subclass if needed
   /// <summary>
-  /// Called when the dialog
+  /// Called when the dialog opens.
   /// </summary>
   protected virtual void Init() { ApplySettings(); }
   /// <summary>
-  /// Called when the user applies changes; subclasses override this to apply their edits to the track
+  /// Called when the user applies changes
   /// </summary>
   protected virtual void Apply() { }
+  /// <summary>
+  /// Called when the user cancels changes
+  /// </summary>
   protected virtual void Cancel() { }
 }
