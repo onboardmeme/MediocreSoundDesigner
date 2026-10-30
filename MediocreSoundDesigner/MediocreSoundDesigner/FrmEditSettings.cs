@@ -1,6 +1,11 @@
 ﻿namespace MediocreSoundDesigner;
-
+/// <summary>
+/// 
+/// </summary>
 public partial class FrmEditSettings : FrmEditMaster {
+    /// <summary>
+    /// 
+    /// </summary>
   public FrmEditSettings() {
     InitializeComponent();
   }
@@ -15,7 +20,9 @@ public partial class FrmEditSettings : FrmEditMaster {
     btnColorTrackBgUnselected.BackColor = Settings.Color.TrackBg_Unselected;
     btnPlayline.BackColor = Settings.Color.Playline;
   }
-
+    /// <summary>
+    /// 
+    /// </summary>
   protected override void Apply() {
     Settings.Color.WinBg = btnColorWinBg.BackColor;
     Settings.Color.WinFg = btnColorWinFg.BackColor;

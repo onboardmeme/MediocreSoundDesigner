@@ -11,7 +11,7 @@ public partial class FrmEditMaster : Form {
 
   // ctor
   /// <summary>
-  /// Creates the editor dialouge
+  /// Creates the editor dialog
   /// </summary>
   public FrmEditMaster() {
     InitializeComponent();
@@ -28,11 +28,18 @@ public partial class FrmEditMaster : Form {
   }
 
   // gui
+  /// <summary>
+  /// Applies the window background colors
+  /// </summary>
   protected void ApplySettings() {
     BackColor = Settings.Color.WinBg;
     ForeColor = Settings.Color.WinFg;
   }
-
+  /// <summary>
+  /// Cancels and closes
+  /// </summary>
+  /// <param name="sender"></param>
+  /// <param name="e"></param>
   public void btnCancel_Click(object sender, EventArgs e) {
     Cancel();
     DialogResult = DialogResult.Cancel;
@@ -47,10 +54,13 @@ public partial class FrmEditMaster : Form {
   }
 
   // override in subclass if needed
+  /// <summary>
+  /// Called when the dialog
+  /// </summary>
   protected virtual void Init() { ApplySettings(); }
-    /// <summary>
-    /// Called when the user applies changes; subclasses override this to apply their edits to the track
-    /// </summary>
-    protected virtual void Apply() { }
+  /// <summary>
+  /// Called when the user applies changes; subclasses override this to apply their edits to the track
+  /// </summary>
+  protected virtual void Apply() { }
   protected virtual void Cancel() { }
 }

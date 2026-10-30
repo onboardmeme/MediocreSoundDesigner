@@ -1,6 +1,6 @@
 ﻿namespace MediocreSoundDesigner;
 /// <summary>
-/// Dialouge box that changes the volume
+/// Dialog box that changes the volume
 /// </summary>
 public partial class FrmEditVolume : FrmEditMaster {
     /// <summary>
@@ -10,9 +10,9 @@ public partial class FrmEditVolume : FrmEditMaster {
     InitializeComponent();
   }
     /// <summary>
-    /// Opens the dialouge box that changes the volume as a percentage
+    /// Opens the dialog box that changes the volume as a percentage
     /// </summary>
-  protected override void Init() {
+    protected override void Init() {
     base.Init();
     nudVolume.Value = (decimal)(track.Volume * 100.0f);
   }

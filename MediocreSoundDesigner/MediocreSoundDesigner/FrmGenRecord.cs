@@ -13,7 +13,7 @@ public partial class FrmGenRecord : FrmEditMaster {
 
 
   /// <summary>
-  /// Creates the recoding dialouge box
+  /// Creates the recoding dialog box
   /// </summary>
   public FrmGenRecord() {
     InitializeComponent();
