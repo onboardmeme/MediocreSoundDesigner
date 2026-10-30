@@ -2,13 +2,18 @@ using MediocreSoundDesigner.Properties;
 using System.Text.Json;
 
 namespace MediocreSoundDesigner;
-
+/// <summary>
+/// The main window of the Sound Designer
+/// </summary>
 public partial class FrmMain : Form
 {
     // fields
     private TrackManager trackManager;
 
     // ctor
+    /// <summary>
+    /// Initializes all of the components and setup.
+    /// </summary>
     public FrmMain()
     {
         InitializeComponent();
@@ -34,6 +39,12 @@ public partial class FrmMain : Form
     }
 
     // GUI controls
+    /// <summary>
+    /// Processes a command key
+    /// </summary>
+    /// <param name="msg"></param>
+    /// <param name="keyData"></param>
+    /// <returns>True if the keystroke was handled, otherwise returns false</returns>
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
         if (trackManager.SelectedTrack is not null)

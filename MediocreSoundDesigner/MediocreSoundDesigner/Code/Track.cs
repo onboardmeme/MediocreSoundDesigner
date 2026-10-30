@@ -1,4 +1,7 @@
-﻿using NAudio.Wave;
+﻿using Microsoft.VisualBasic.Devices;
+using NAudio.CoreAudioApi;
+using NAudio.Wave;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace MediocreSoundDesigner;
 /// <summary>
@@ -285,8 +288,11 @@ public class Track : IDisposable {
     }
   }
 
-  // dispose
-  public void Dispose() {
+    // dispose
+    /// <summary>
+    /// Releases the audio output device and file reader used by this track.
+    /// </summary>
+    public void Dispose() {
     outputDevice?.Dispose();
     fileReader?.Dispose();
   }
