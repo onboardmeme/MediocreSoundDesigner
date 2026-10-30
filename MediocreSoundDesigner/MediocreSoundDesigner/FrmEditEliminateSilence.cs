@@ -10,6 +10,7 @@ public partial class FrmEditEliminateSilence : FrmEditMaster {
     cmbWhere.SelectedIndex = 0;
   }
 
+
   protected override void Apply() {
     SampleRegion region = cmbWhere.SelectedIndex switch {
       0 => SampleRegion.BEGINNING_ONLY,

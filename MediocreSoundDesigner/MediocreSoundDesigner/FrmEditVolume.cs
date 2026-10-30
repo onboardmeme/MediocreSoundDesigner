@@ -10,7 +10,7 @@ public partial class FrmEditVolume : FrmEditMaster {
     InitializeComponent();
   }
     /// <summary>
-    /// Opens the dialouge box that changes the volume
+    /// Opens the dialouge box that changes the volume as a percentage
     /// </summary>
   protected override void Init() {
     base.Init();

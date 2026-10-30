@@ -19,6 +19,7 @@ public partial class FrmGenRecord : FrmEditMaster {
     btnRecord.BackgroundImage = Resources.record;
   }
 
+    /// <inheritdoc/>
   protected override void Apply() {
     track.ReplaceSamples(recordedSamples.ToArray());
   }

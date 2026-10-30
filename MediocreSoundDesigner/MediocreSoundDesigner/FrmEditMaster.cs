@@ -1,15 +1,27 @@
 ﻿namespace MediocreSoundDesigner;
-
+/// <summary>
+/// 
+/// </summary>
 public partial class FrmEditMaster : Form {
   // fields
+  /// <summary>
+  /// The track that is being edited
+  /// </summary>
   protected Track track;
 
   // ctor
+  /// <summary>
+  /// Creates the editor dialouge
+  /// </summary>
   public FrmEditMaster() {
     InitializeComponent();
   }
 
   // sound
+  /// <summary>
+  /// Sets the track and calls Init to work on it.
+  /// </summary>
+  /// <param name="sound"></param>
   public virtual void SetSound(Track sound) {
     this.track = sound;
     Init();
