@@ -3,23 +3,33 @@ using NAudio.Wave;
 
 namespace MediocreSoundDesigner;
 
+/// <summary>
+/// Records audio and places it into the track
+/// </summary>
 public partial class FrmGenRecord : FrmEditMaster {
   private WaveIn waveSource = null;
   private List<float> recordedSamples;
   private bool isRecording;
 
+
+  /// <summary>
+  /// Creates the recoding dialouge box
+  /// </summary>
   public FrmGenRecord() {
     InitializeComponent();
   }
-
-  protected override void Init() {
+    /// <summary>
+    /// Initializes the computer recording software. Clears previous samples, sets recording to false, and sets up
+    /// record button image.
+    /// </summary>
+    protected override void Init() {
     base.Init();
     recordedSamples = new();
     isRecording = false;
     btnRecord.BackgroundImage = Resources.record;
   }
 
-    /// <inheritdoc/>
+  /// <inheritdoc/>
   protected override void Apply() {
     track.ReplaceSamples(recordedSamples.ToArray());
   }
