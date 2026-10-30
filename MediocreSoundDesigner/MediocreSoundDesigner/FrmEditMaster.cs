@@ -36,6 +36,9 @@ public partial class FrmEditMaster : Form {
 
   // override in subclass if needed
   protected virtual void Init() { ApplySettings(); }
-  protected virtual void Apply() { }
+    /// <summary>
+    /// Called when the user applies changes; subclasses override this to apply their edits to the track
+    /// </summary>
+    protected virtual void Apply() { }
   protected virtual void Cancel() { }
 }
