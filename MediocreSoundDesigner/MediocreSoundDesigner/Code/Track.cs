@@ -1,14 +1,30 @@
 ﻿using NAudio.Wave;
 
 namespace MediocreSoundDesigner;
-
+/// <summary>
+/// Used to hold the selection options for the regions of the audio.
+/// </summary>
 public enum SampleRegion {
-  BEGINNING_ONLY,
-  END_ONLY,
-  BEGINNING_AND_END,
-  ANYWHERE,
+    /// <summary>
+    /// Only selects the beginningg.
+    /// </summary>
+    BEGINNING_ONLY,
+    /// <summary>
+    /// Only selects the end
+    /// </summary>
+    END_ONLY,
+    /// <summary>
+    /// Selects the beginning and the end of the sample.
+    /// </summary>
+    BEGINNING_AND_END,
+    /// <summary>
+    /// Grabs the entire audio file.
+    /// </summary>
+    ANYWHERE,
 }
-
+/// <summary>
+/// Represents one piece of audio: its samples, volume, and drawing position.
+/// </summary>
 public class Track : IDisposable {
   // Fields
   private string file;
@@ -27,14 +43,24 @@ public class Track : IDisposable {
 
   // properties
   public int DrawOffset { get; set; }
-  public bool IsDisabled { get; private set; }
+
+    /// <summary>
+    /// Wether or not the track is currently muted
+    /// </summary>
+    public bool IsDisabled { get; private set; }
   public Panel PanDrawSamples { get; private set; }
-  public float Volume { get; private set; }
+    /// <summary>
+    /// Represents how loud the sample is
+    /// </summary>
+    public float Volume { get; private set; }
   private string tempFilePath => Path.Combine(Path.GetTempPath(), "MediocreSoundDesigner", "temp.wav");
   public PlaybackState State => outputDevice?.PlaybackState ?? PlaybackState.Stopped;
 
-  // ctor
-  public Track(string file) {
+    // ctor
+    /// <summary>
+    /// The file that stores the audio
+    /// </summary>
+    public Track(string file) {
     fileReader = new AudioFileReader(file);
     int sampleCount = (int)(fileReader.Length / 4);
     this.samples = new float[sampleCount];
@@ -54,7 +80,10 @@ public class Track : IDisposable {
     this.sampleRate = fileReader.WaveFormat.SampleRate;
     IsDisabled = false;
   }
-  public Track(float[] samples) {
+    /// <summary>
+    /// Generates audio instead of pulling it from an external source
+    /// </summary>
+    public Track(float[] samples) {
     this.samples = samples;
 
     this.file = "";
@@ -80,26 +109,41 @@ public class Track : IDisposable {
   public void ReplaceSamples(float[] samples) {
     this.samples = samples;
   }
-  public void Reverse() {
+    /// <summary>
+    /// Reverses the audio file
+    /// </summary>
+    public void Reverse() {
     for (int i = 0; i < samples.Length / 2; i++) {
       var temp = samples[i];
       samples[i] = samples[samples.Length - 1 - i];
       samples[samples.Length - 1 - i] = temp;
     }
   }
-  public void Flip() {
+    /// <summary>
+    /// Negates the value of each sample (ex: 0.5 becomes -0.5 and -0.5 becomes 0.5)
+    /// </summary>
+    public void Flip() {
     for (int i = 0; i < samples.Length; i++) {
       samples[i] *= -1;
     }
   }
-  public void Trim() {
+    /// <summary>
+    /// Cuts down audio
+    /// </summary>
+    public void Trim() {
   }
   public void AlterTimeScale(float scale) {
   }
-  public void SetVolume(float newVolume) {
+    /// <summary>
+    /// Sets the volume to the given newVolume
+    /// </summary>
+    public void SetVolume(float newVolume) {
     Volume = newVolume;
   }
-  public void EliminateSilence(SampleRegion region, float minDuration, float thres) {
+    /// <summary>
+    /// Eliminates silence algorithmically based on the selected region and thres
+    /// </summary>
+    public void EliminateSilence(SampleRegion region, float minDuration, float thres) {
     float[] newSamples = CloneSamples();
     if (region is SampleRegion.BEGINNING_ONLY or SampleRegion.BEGINNING_AND_END) {
       int silentDurationInNumSamples = 0;
@@ -153,8 +197,11 @@ public class Track : IDisposable {
     samples = newSamples;
   }
 
-  // play
-  public void Play() {
+    // play
+    /// <summary>
+    /// Plays the audio sample
+    /// </summary>
+    public void Play() {
     outputDevice?.Dispose();
     fileReader?.Dispose();
     SaveToTempFile();
@@ -163,27 +210,39 @@ public class Track : IDisposable {
     outputDevice.Init(fileReader);
     outputDevice.Play();
   }
-  public void Pause() {
+    /// <summary>
+    /// Pauses the audio sample
+    /// </summary>
+    public void Pause() {
     outputDevice?.Pause();
   }
-  public void Reset() {
+    /// <summary>
+    /// Resets the audio sample
+    /// </summary>
+    public void Reset() {
   }
   public int GetPlayheadPos() {
     return (int)((outputDevice?.GetPosition() ?? 0) / 4);
   }
-  public void ToggleDisabled() {
+    /// <summary>
+    /// Switches the true/false value of IsDisabled
+    /// </summary>
+    public void ToggleDisabled() {
     IsDisabled = !IsDisabled;
   }
 
   // file i/o
   private void SaveToTempFile() {
     Directory.CreateDirectory(Path.GetDirectoryName(tempFilePath));
-    using var writer = new WaveFileWriter(tempFilePath, fileReader?.WaveFormat ?? new());
+    using var writer = new WaveFileWriter(tempFilePath, fileReader?.WaveFormat ?? WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
     writer.WriteSamples(GetAdjustedSamples(), 0, samples.Length);
   }
-  public void SaveToFile(string path) {
+    /// <summary>
+    /// Saves the track to a hard written file
+    /// </summary>
+    public void SaveToFile(string path) {
     Directory.CreateDirectory(Path.GetDirectoryName(path));
-    using var writer = new WaveFileWriter(path, fileReader?.WaveFormat ?? new());
+    using var writer = new WaveFileWriter(path, fileReader?.WaveFormat ?? WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
     writer.WriteSamples(GetAdjustedSamples(), 0, samples.Length);
   }
   public float[] GetAdjustedSamples() {
