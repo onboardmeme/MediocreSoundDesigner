@@ -111,6 +111,7 @@
       menuFileOpen.Name = "menuFileOpen";
       menuFileOpen.Size = new Size(180, 22);
       menuFileOpen.Text = "Open...";
+      menuFileOpen.ToolTipText = "Opens an audio file.";
       menuFileOpen.Click += menuFileOpen_Click;
       // 
       // menuFileSave
@@ -118,6 +119,7 @@
       menuFileSave.Name = "menuFileSave";
       menuFileSave.Size = new Size(180, 22);
       menuFileSave.Text = "Save...";
+      menuFileSave.ToolTipText = "Saves the created audio to a .wav file.";
       menuFileSave.Click += menuFileSave_Click;
       // 
       // menuEdit
@@ -132,6 +134,7 @@
       menuEditFlip.Name = "menuEditFlip";
       menuEditFlip.Size = new Size(180, 22);
       menuEditFlip.Text = "Flip";
+      menuEditFlip.ToolTipText = "Inverts the waveform of the track.";
       menuEditFlip.Click += menuEditFlip_Click;
       // 
       // menuEditReverse
@@ -139,6 +142,7 @@
       menuEditReverse.Name = "menuEditReverse";
       menuEditReverse.Size = new Size(180, 22);
       menuEditReverse.Text = "Reverse";
+      menuEditReverse.ToolTipText = "Reverses the audio of the tracks.";
       menuEditReverse.Click += menuEditReverse_Click;
       // 
       // menuEditVolume
@@ -146,6 +150,7 @@
       menuEditVolume.Name = "menuEditVolume";
       menuEditVolume.Size = new Size(180, 22);
       menuEditVolume.Text = "Alter Volume...";
+      menuEditVolume.ToolTipText = "Raise or lower the volume.";
       menuEditVolume.Click += menuEditVolume_Click;
       // 
       // menuEditPitch
@@ -153,6 +158,7 @@
       menuEditPitch.Name = "menuEditPitch";
       menuEditPitch.Size = new Size(180, 22);
       menuEditPitch.Text = "Alter Pitch...";
+      menuEditPitch.ToolTipText = "Raise or lower the pitch of the selected track in semitones.";
       menuEditPitch.Click += menuEditPitch_Click;
       // 
       // menuEditEliminateSilence
@@ -160,6 +166,7 @@
       menuEditEliminateSilence.Name = "menuEditEliminateSilence";
       menuEditEliminateSilence.Size = new Size(180, 22);
       menuEditEliminateSilence.Text = "Eliminate Silence...";
+      menuEditEliminateSilence.ToolTipText = "Algorithmically eliminates silence from the track.";
       menuEditEliminateSilence.Click += menuEditEliminateSilence_Click;
       // 
       // menuGen
@@ -174,6 +181,7 @@
       menuGenRecord.Name = "menuGenRecord";
       menuGenRecord.Size = new Size(152, 22);
       menuGenRecord.Text = "Record...";
+      menuGenRecord.ToolTipText = "Records audio from the microphone.";
       menuGenRecord.Click += menuGenRecord_Click;
       // 
       // menuGenNoise
@@ -181,6 +189,7 @@
       menuGenNoise.Name = "menuGenNoise";
       menuGenNoise.Size = new Size(152, 22);
       menuGenNoise.Text = "Noise";
+      menuGenNoise.ToolTipText = "Generates random noise.";
       menuGenNoise.Click += menuGenNoise_Click;
       // 
       // menuGenGradientNoise
@@ -188,6 +197,7 @@
       menuGenGradientNoise.Name = "menuGenGradientNoise";
       menuGenGradientNoise.Size = new Size(152, 22);
       menuGenGradientNoise.Text = "Gradient Noise";
+      menuGenGradientNoise.ToolTipText = "Generates random gradient noise.";
       menuGenGradientNoise.Click += menuGenGradientNoise_Click;
       // 
       // btnPlay
@@ -233,6 +243,7 @@
       menuFileSettings.Name = "menuFileSettings";
       menuFileSettings.Size = new Size(180, 22);
       menuFileSettings.Text = "Settings...";
+      menuFileSettings.ToolTipText = "Adjust the colors of the program.";
       menuFileSettings.Click += menuFileSettings_Click;
       // 
       // FrmMain

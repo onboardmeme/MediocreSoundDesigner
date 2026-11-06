@@ -6,7 +6,10 @@ namespace MediocreSoundDesigner
     partial class FrmEditPitch
     {
         private System.ComponentModel.IContainer components = null;
-
+        /// <summary>
+        /// Cleans up any used resources.
+        /// </summary>
+        /// <param name="disposing">True if resources should be disposed; otherwise false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
