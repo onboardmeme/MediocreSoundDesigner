@@ -38,6 +38,7 @@
     <None Update="Resources\noise.wav">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Update="Beats\*.wav" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

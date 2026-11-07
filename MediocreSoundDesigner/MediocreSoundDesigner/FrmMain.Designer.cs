@@ -44,6 +44,7 @@
       menuEditEliminateSilence = new ToolStripMenuItem();
       menuGen = new ToolStripMenuItem();
       menuGenRecord = new ToolStripMenuItem();
+      beatsToolStripMenuItem = new ToolStripMenuItem();
       menuGenNoise = new ToolStripMenuItem();
       menuGenGradientNoise = new ToolStripMenuItem();
       btnPlay = new Button();
@@ -171,7 +172,11 @@
       // 
       // menuGen
       // 
-      menuGen.DropDownItems.AddRange(new ToolStripItem[] { menuGenRecord, menuGenNoise, menuGenGradientNoise });
+      menuGen.DropDownItems.AddRange(new ToolStripItem[] { menuGenRecord, menuGenNoise, menuGenGradientNoise, beatsToolStripMenuItem });
+      beatsToolStripMenuItem.Name = "beatsToolStripMenuItem";
+      beatsToolStripMenuItem.Text = "Beats";
+      beatsToolStripMenuItem.ToolTipText = "Choose a premade beat to add as a new track.";
+      beatsToolStripMenuItem.Click += menuGenBeats_Click;
       menuGen.Name = "menuGen";
       menuGen.Size = new Size(66, 20);
       menuGen.Text = "&Generate";
@@ -295,6 +300,7 @@
     private ToolStripMenuItem menuEditEliminateSilence;
     private Label lblPlayhead;
     private ToolStripMenuItem menuGenRecord;
+    private ToolStripMenuItem beatsToolStripMenuItem;
     private ToolStripMenuItem menuFileSettings;
   }
 }
