@@ -36,6 +36,7 @@
       menuFile = new ToolStripMenuItem();
       menuFileOpen = new ToolStripMenuItem();
       menuFileSave = new ToolStripMenuItem();
+      menuAudioLibrary = new ToolStripMenuItem();
       menuEdit = new ToolStripMenuItem();
       menuEditFlip = new ToolStripMenuItem();
       menuEditReverse = new ToolStripMenuItem();
@@ -48,6 +49,7 @@
       menuGenNoise = new ToolStripMenuItem();
       menuGenGradientNoise = new ToolStripMenuItem();
       btnPlay = new Button();
+      btnSaveCurrentTrack = new Button();
       tmrUpdate = new System.Windows.Forms.Timer(components);
       sfdSaveFile = new SaveFileDialog();
       trkDrawTimescale = new TrackBar();
@@ -102,7 +104,11 @@
       // 
       // menuFile
       // 
-      menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileOpen, menuFileSave, menuFileSettings });
+      menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileOpen, menuFileSave, menuAudioLibrary, menuFileSettings });
+      menuAudioLibrary.Name = "menuAudioLibrary";
+      menuAudioLibrary.Text = "Audio Library...";
+      menuAudioLibrary.ToolTipText = "Browse and reuse saved audio clips.";
+      menuAudioLibrary.Click += menuAudioLibrary_Click;
       menuFile.Name = "menuFile";
       menuFile.Size = new Size(37, 20);
       menuFile.Text = "&File";
@@ -222,6 +228,12 @@
       btnPlay.TabIndex = 6;
       btnPlay.UseVisualStyleBackColor = false;
       btnPlay.Click += btnPlay_Click;
+      btnSaveCurrentTrack.Location = new Point(15, 665);
+      btnSaveCurrentTrack.Size = new Size(160, 32);
+      btnSaveCurrentTrack.Name = "btnSaveCurrentTrack";
+      btnSaveCurrentTrack.Text = "Save Current Track";
+      btnSaveCurrentTrack.UseVisualStyleBackColor = true;
+      btnSaveCurrentTrack.Click += btnSaveCurrentTrack_Click;
       // 
       // tmrUpdate
       // 
@@ -259,6 +271,7 @@
       ClientSize = new Size(1604, 783);
       Controls.Add(trkDrawTimescale);
       Controls.Add(btnPlay);
+      Controls.Add(btnSaveCurrentTrack);
       Controls.Add(lblDebug);
       Controls.Add(panTracks);
       Controls.Add(menu);
@@ -283,12 +296,14 @@
     private MenuStrip menu;
     private ToolStripMenuItem menuEdit;
     private Button btnPlay;
+    private Button btnSaveCurrentTrack;
     private ToolStripMenuItem menuEditVolume;
     private ToolStripMenuItem menuEditPitch;
     private ToolStripMenuItem menuEditReverse;
     private ToolStripMenuItem menuFile;
     private ToolStripMenuItem menuFileOpen;
     private ToolStripMenuItem menuFileSave;
+    private ToolStripMenuItem menuAudioLibrary;
     private System.Windows.Forms.Timer tmrUpdate;
     private ToolStripMenuItem menuGen;
     private ToolStripMenuItem menuGenNoise;
