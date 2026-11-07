@@ -112,6 +112,45 @@ public partial class FrmMain : Form
             newTrack.PanDrawSamples.Invalidate();
         }
     }
+    private void menuAudioLibrary_Click(object sender, EventArgs e)
+    {
+        using var dialog = new FrmAudioLibrary();
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        Track clip;
+        try { clip = new Track(dialog.SelectedClipPath); }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not load the clip: {ex.Message}", "Audio Library", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+        CreateTrackPanel(clip);
+        trackManager.AddTrack(clip);
+        UpdateSizes();
+        clip.PanDrawSamples.Invalidate();
+    }
+
+    private void btnSaveCurrentTrack_Click(object sender, EventArgs e)
+    {
+        var selected = trackManager.SelectedTrack;
+        if (selected == null || !trackManager.Tracks.Contains(selected))
+        {
+            MessageBox.Show(this, "Select a track to save first.", "Save Current Track");
+            return;
+        }
+        string name = Microsoft.VisualBasic.Interaction.InputBox(
+            "Name this clip to save it in your audio library:", "Save Current Track", "");
+        if (string.IsNullOrWhiteSpace(name)) return;
+        try
+        {
+            new AudioLibrary().SaveClip(name, selected);
+            MessageBox.Show(this, "Track saved. Open File > Audio Library to reuse it.", "Save Current Track");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Could not save track", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     private void menuFileSave_Click(object sender, EventArgs e)
     {
         sfdSaveFile.DefaultExt = "wav";

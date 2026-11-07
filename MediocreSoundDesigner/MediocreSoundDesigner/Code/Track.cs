@@ -75,8 +75,9 @@ public class Track : IDisposable {
     /// </summary>
     public Track(string file)
     {
-        fileReader = new AudioFileReader(file);
-        ISampleProvider provider = fileReader;
+        // Samples are kept in memory; release the source file after importing it.
+        using var reader = new AudioFileReader(file);
+        ISampleProvider provider = reader;
         if (provider.WaveFormat.Channels == 2)
             provider = new StereoToMonoSampleProvider(provider);
         if (provider.WaveFormat.SampleRate != 44100)
@@ -90,7 +91,7 @@ public class Track : IDisposable {
         samples = all.ToArray();
 
         this.file = file;
-        this.duration = fileReader.TotalTime;
+        this.duration = reader.TotalTime;
         this.offset = 0;
         this.timeScale = 1.0f;
         this.Volume = 1.0f;
