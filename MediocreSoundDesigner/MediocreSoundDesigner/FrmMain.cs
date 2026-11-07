@@ -176,6 +176,27 @@ public partial class FrmMain : Form
         }
     }
 
+    private void menuGenBeats_Click(object sender, EventArgs e)
+    {
+        using var dialog = new FrmBeats();
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        Track beat;
+        try
+        {
+            beat = new Track(dialog.SelectedBeatPath);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not open the beat: {ex.Message}", "Beat could not be added",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+        CreateTrackPanel(beat);
+        trackManager.AddTrack(beat);
+        UpdateSizes();
+        beat.PanDrawSamples.Invalidate();
+    }
+
     private void menuGenRecord_Click(object sender, EventArgs e)
     {
         Track newTrack = new(new float[0]);
