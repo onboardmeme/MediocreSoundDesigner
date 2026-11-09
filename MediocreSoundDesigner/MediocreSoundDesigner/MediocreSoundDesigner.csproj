@@ -39,6 +39,7 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="Beats\*.wav" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Beats\*.mp3" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
