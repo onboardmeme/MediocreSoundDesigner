@@ -9,6 +9,12 @@ public partial class FrmMain : Form
 {
     // fields
     private TrackManager trackManager;
+    private Panel trackRows;
+    private readonly List<Panel> trackHeaders = new();
+    private int trackRowHeight;
+    private int trackRowGap;
+    private int waveformLeft;
+    private bool updatingTrackLayout;
     private Track selectionTrack;
     private int selectionAnchor;
     private int selectionStart;
@@ -66,6 +72,7 @@ public partial class FrmMain : Form
     private void Setup()
     {
         DoubleBuffered = true;
+        SetupTrackRows();
         trackManager = new(panTracks);
         btnPlay.BackgroundImage = Resources.play;
         trackManager.DrawTimescale = trkDrawTimescale.Value;
@@ -400,11 +407,13 @@ public partial class FrmMain : Form
             Left = 0,
             Top = 0,
         };
-        pan.Click += (sender, e) => {
+        pan.Click += (sender, e) =>
+        {
             if (selectionTrack != track) ClearAudioSelection();
             trackManager.SelectTrack(track);
         };
-        pan.MouseDown += (sender, e) => {
+        pan.MouseDown += (sender, e) =>
+        {
             if (e.Button != MouseButtons.Left) return;
             ClearAudioSelection();
             trackManager.SelectTrack(track);
@@ -414,23 +423,28 @@ public partial class FrmMain : Form
             pan.Capture = true;
             UpdateAudioSelection(track, e.X);
         };
-        pan.MouseMove += (sender, e) => {
+        pan.MouseMove += (sender, e) =>
+        {
             if (selectingAudio && selectionTrack == track) UpdateAudioSelection(track, e.X);
         };
-        pan.MouseUp += (sender, e) => {
+        pan.MouseUp += (sender, e) =>
+        {
             if (e.Button != MouseButtons.Left || !selectingAudio || selectionTrack != track) return;
             UpdateAudioSelection(track, e.X);
             selectingAudio = false;
             pan.Capture = false;
         };
-        pan.MouseCaptureChanged += (sender, e) => {
+        pan.MouseCaptureChanged += (sender, e) =>
+        {
             if (!pan.Capture) selectingAudio = false;
         };
-        pan.DoubleClick += (sender, e) => {
+        pan.DoubleClick += (sender, e) =>
+        {
             track.ToggleDisabled();
             track.PanDrawSamples.Invalidate();
         };
-        pan.Paint += (sender, e) => {
+        pan.Paint += (sender, e) =>
+        {
             track.DrawSamples(e.Graphics, trackManager.DrawTimescale);
             if (selectionTrack == track && selectionEnd > selectionStart)
             {
@@ -448,27 +462,96 @@ public partial class FrmMain : Form
         return pan;
     }
 
+    /// <summary>
+    /// Sets up the track rows panel and adds the track headers and waveform panel to it.
+    /// </summary>
+    private void SetupTrackRows()
+    {
+        Panel[] headers = { panel1, panel2, panel3, panel4, panel5, panel6, panel7, panel8, panel9 };
+        trackRowHeight = panel1.Height;
+        trackRowGap = Math.Max(0, panel2.Top - panel1.Bottom);
+        waveformLeft = panTracks.Left - panel1.Left;
+        trackRows = new Panel
+        {
+            Name = "panTrackRows",
+            Location = panel1.Location,
+            AutoScroll = true,
+            BackColor = BackColor
+        };
+        Controls.Add(trackRows);
+        foreach (Panel header in headers)
+        {
+            trackHeaders.Add(header);
+            trackRows.Controls.Add(header);
+        }
+        trackRows.Controls.Add(panTracks);
+        // Both columns scroll together; each waveform gets one fixed-height row.
+        panTracks.AutoScroll = false;
+        panTracks.BorderStyle = BorderStyle.None;
+    }
+
     private void UpdateSizes()
     {
-        const int PADDING = 15;
-
-        panTracks.Left = PADDING;
-        panTracks.Width = ClientSize.Width - (PADDING * 2);
-
-        int top = 0;
-        foreach (Track track in trackManager.Tracks)
+        if (trackRows == null || trackManager == null || updatingTrackLayout) return;
+        updatingTrackLayout = true;
+        try
         {
-            track.PanDrawSamples.Left = 0;
-            track.PanDrawSamples.Width = panTracks.Width;
-            track.PanDrawSamples.Height = (panTracks.Height / trackManager.Tracks.Count) - 1;
-            track.PanDrawSamples.Top = top;
-            track.PanDrawSamples.Invalidate();
-            top += track.PanDrawSamples.Height;
+        const int PADDING = 15;
+        Point scroll = trackRows.AutoScrollPosition;
+        trackRows.SuspendLayout();
+        trackRows.AutoScrollPosition = Point.Empty;
+        trackRows.Width = Math.Max(waveformLeft + 100, ClientSize.Width - trackRows.Left - PADDING);
+        trackRows.Height = Math.Max(50, ClientSize.Height - trackRows.Top - lblDebug.Height);
+        int stride = trackRowHeight + trackRowGap;
+        while (trackHeaders.Count < trackManager.Tracks.Count)
+        {
+            var header = new Panel { BackColor = panel1.BackColor, Size = panel1.Size };
+            header.Controls.Add(new TextBox
+            {
+                Text = $"Track {trackHeaders.Count + 1}",
+                Location = textBox1.Location,
+                Size = textBox1.Size,
+                BackColor = textBox1.BackColor,
+                ForeColor = textBox1.ForeColor,
+                BorderStyle = textBox1.BorderStyle
+            });
+            trackHeaders.Add(header);
+            trackRows.Controls.Add(header);
         }
+        int rowCount = Math.Max(9, trackManager.Tracks.Count);
+        int contentHeight = rowCount * stride - trackRowGap;
+        int scrollbarWidth = contentHeight > trackRows.ClientSize.Height ? SystemInformation.VerticalScrollBarWidth : 0;
+        panTracks.Location = new Point(waveformLeft, 0);
+        panTracks.Width = Math.Max(1, trackRows.Width - waveformLeft - scrollbarWidth);
+        panTracks.Height = contentHeight;
+        for (int i = 0; i < trackHeaders.Count; i++)
+        {
+            trackHeaders[i].Location = new Point(0, i * stride);
+            trackHeaders[i].Visible = i < rowCount;
+        }
+        for (int i = 0; i < trackManager.Tracks.Count; i++)
+        {
+            Track track = trackManager.Tracks[i];
+            track.PanDrawSamples.Left = 0;
+            track.PanDrawSamples.Width = panTracks.ClientSize.Width;
+            track.PanDrawSamples.Height = trackRowHeight;
+            track.PanDrawSamples.Top = i * stride;
+            track.PanDrawSamples.Invalidate();
+        }
+        trackRows.AutoScrollMinSize = new Size(0, contentHeight);
+        trackRows.ResumeLayout();
+        trackRows.AutoScrollPosition = new Point(-scroll.X, -scroll.Y);
         trkDrawTimescale.Width = panTracks.Width;
-        trkDrawTimescale.Left = PADDING;
+        trkDrawTimescale.Left = trackRows.Left + waveformLeft;
         lblPlayhead.Left = 0;
         lblPlayhead.Height = panTracks.Height;
         lblPlayhead.BringToFront();
+        }
+        finally { updatingTrackLayout = false; }
+    }
+
+    private void textBox1_TextChanged(object sender, EventArgs e)
+    {
+
     }
 }
