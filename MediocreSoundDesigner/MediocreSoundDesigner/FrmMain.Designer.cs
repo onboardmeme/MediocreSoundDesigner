@@ -44,6 +44,7 @@
       menuEditPitch = new ToolStripMenuItem();
       menuEditEliminateSilence = new ToolStripMenuItem();
       menuGen = new ToolStripMenuItem();
+      menuGenInstruments = new ToolStripMenuItem();
       menuGenRecord = new ToolStripMenuItem();
       beatsToolStripMenuItem = new ToolStripMenuItem();
       menuGenNoise = new ToolStripMenuItem();
@@ -178,7 +179,11 @@
       // 
       // menuGen
       // 
-      menuGen.DropDownItems.AddRange(new ToolStripItem[] { menuGenRecord, menuGenNoise, menuGenGradientNoise, beatsToolStripMenuItem });
+      menuGen.DropDownItems.AddRange(new ToolStripItem[] { menuGenRecord, menuGenNoise, menuGenGradientNoise, beatsToolStripMenuItem, menuGenInstruments });
+      menuGenInstruments.Name = "menuGenInstruments";
+      menuGenInstruments.Text = "Instruments";
+      menuGenInstruments.ToolTipText = "View instruments for beat creation.";
+      menuGenInstruments.Click += menuGenInstruments_Click;
       beatsToolStripMenuItem.Name = "beatsToolStripMenuItem";
       beatsToolStripMenuItem.Text = "Beats";
       beatsToolStripMenuItem.ToolTipText = "Choose a premade beat to add as a new track.";
@@ -306,6 +311,7 @@
     private ToolStripMenuItem menuAudioLibrary;
     private System.Windows.Forms.Timer tmrUpdate;
     private ToolStripMenuItem menuGen;
+    private ToolStripMenuItem menuGenInstruments;
     private ToolStripMenuItem menuGenNoise;
     private ToolStripMenuItem menuGenGradientNoise;
     private ToolStripMenuItem menuEditFlip;

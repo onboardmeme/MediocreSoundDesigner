@@ -215,6 +215,23 @@ public partial class FrmMain : Form
         }
     }
 
+    private void menuGenInstruments_Click(object sender, EventArgs e)
+    {
+        using var dialog = new FrmInstruments();
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        Track instrument;
+        try { instrument = new Track(dialog.SelectedInstrumentPath); }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not add the instrument: {ex.Message}", "Instruments", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+        CreateTrackPanel(instrument);
+        trackManager.AddTrack(instrument);
+        UpdateSizes();
+        instrument.PanDrawSamples.Invalidate();
+    }
+
     private void menuGenBeats_Click(object sender, EventArgs e)
     {
         using var dialog = new FrmBeats();
