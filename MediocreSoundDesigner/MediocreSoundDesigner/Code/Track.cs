@@ -63,6 +63,15 @@ public class Track : IDisposable {
   /// Represents how loud the sample is
   /// </summary>
   public float Volume { get; private set; }
+  /// <summary>Number of mono samples currently in the track.</summary>
+  public int SampleCount => samples.Length;
+
+  /// <summary>Removes a range of samples, joining the remaining audio together.</summary>
+  public void DeleteRange(int start, int end) {
+    start = Math.Clamp(start, 0, samples.Length);
+    end = Math.Clamp(end, start, samples.Length);
+    samples = [.. samples[..start], .. samples[end..]];
+  }
   private string tempFilePath => Path.Combine(Path.GetTempPath(), "MediocreSoundDesigner", "temp.wav");
   /// <summary>
   /// Wether the track is playing or not

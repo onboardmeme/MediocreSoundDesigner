@@ -9,6 +9,48 @@ public partial class FrmMain : Form
 {
     // fields
     private TrackManager trackManager;
+    private Track selectionTrack;
+    private int selectionAnchor;
+    private int selectionStart;
+    private int selectionEnd;
+    private bool selectingAudio;
+
+    private void ClearAudioSelection()
+    {
+        var oldTrack = selectionTrack;
+        selectionTrack = null;
+        selectingAudio = false;
+        selectionStart = selectionEnd = 0;
+        menuDeleteSelectedAudio.Enabled = false;
+        lblDebug.Text = "";
+        if (oldTrack?.PanDrawSamples is { IsDisposed: false } panel) panel.Invalidate();
+    }
+
+    private int SampleAt(Track track, int x) => (int)Math.Clamp(
+        ((long)x - track.DrawOffset) * Math.Max(1, trackManager.DrawTimescale), 0L, track.SampleCount);
+
+    private void UpdateAudioSelection(Track track, int x)
+    {
+        int position = SampleAt(track, x);
+        selectionStart = Math.Min(selectionAnchor, position);
+        selectionEnd = Math.Max(selectionAnchor, position);
+        menuDeleteSelectedAudio.Enabled = selectionEnd > selectionStart;
+        lblDebug.Text = selectionEnd > selectionStart
+            ? $"Selected: {selectionStart / 44100.0:F2}s – {selectionEnd / 44100.0:F2}s | Edit > Delete Selected Audio"
+            : "Drag across a waveform to select audio.";
+        track.PanDrawSamples.Invalidate();
+    }
+
+    private void menuDeleteSelectedAudio_Click(object sender, EventArgs e)
+    {
+        if (selectionTrack == null || !trackManager.Tracks.Contains(selectionTrack) || selectionEnd <= selectionStart) return;
+        if (MessageBox.Show(this, "Delete the highlighted audio and join the remaining sections? This cannot be undone.",
+            "Delete Selected Audio", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+            MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
+        selectionTrack.DeleteRange(selectionStart, selectionEnd);
+        ClearAudioSelection();
+        UpdateSizes();
+    }
 
     // ctor
     /// <summary>
@@ -47,6 +89,11 @@ public partial class FrmMain : Form
     /// <returns>True if the keystroke was handled, otherwise returns false</returns>
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (keyData == Keys.Delete && selectionTrack != null && selectionEnd > selectionStart)
+        {
+            menuDeleteSelectedAudio_Click(this, EventArgs.Empty);
+            return true;
+        }
         if (trackManager.SelectedTrack is not null)
         {
             if (keyData == Keys.Left)
@@ -67,6 +114,7 @@ public partial class FrmMain : Form
                 {
                     if (MessageBox.Show("This will delete the selected track. This is NOT undoable!", "Are You Sure?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation) == DialogResult.Yes)
                     {
+                        ClearAudioSelection();
                         panTracks.Controls.Remove(trackManager.SelectedTrack.PanDrawSamples);
                         trackManager.SelectedTrack.PanDrawSamples.Dispose();
                         trackManager.SelectedTrack.Dispose();
@@ -179,10 +227,12 @@ public partial class FrmMain : Form
 
     private void menuEditFlip_Click(object sender, EventArgs e)
     {
+        ClearAudioSelection();
         trackManager.SelectedTrack?.Flip();
     }
     private void menuEditReverse_Click(object sender, EventArgs e)
     {
+        ClearAudioSelection();
         trackManager.SelectedTrack?.Reverse();
     }
     private void menuEditVolume_Click(object sender, EventArgs e)
@@ -196,6 +246,7 @@ public partial class FrmMain : Form
     }
     private void menuEditPitch_Click(object sender, EventArgs e)
     {
+        ClearAudioSelection();
         if (trackManager.SelectedTrack is not null)
         {
             FrmEditPitch frm = new();
@@ -207,6 +258,7 @@ public partial class FrmMain : Form
     }
     private void menuEditEliminateSilence_Click(object sender, EventArgs e)
     {
+        ClearAudioSelection();
         if (trackManager.SelectedTrack is not null)
         {
             FrmEditEliminateSilence frm = new();
@@ -349,7 +401,30 @@ public partial class FrmMain : Form
             Top = 0,
         };
         pan.Click += (sender, e) => {
+            if (selectionTrack != track) ClearAudioSelection();
             trackManager.SelectTrack(track);
+        };
+        pan.MouseDown += (sender, e) => {
+            if (e.Button != MouseButtons.Left) return;
+            ClearAudioSelection();
+            trackManager.SelectTrack(track);
+            selectionTrack = track;
+            selectionAnchor = SampleAt(track, e.X);
+            selectingAudio = true;
+            pan.Capture = true;
+            UpdateAudioSelection(track, e.X);
+        };
+        pan.MouseMove += (sender, e) => {
+            if (selectingAudio && selectionTrack == track) UpdateAudioSelection(track, e.X);
+        };
+        pan.MouseUp += (sender, e) => {
+            if (e.Button != MouseButtons.Left || !selectingAudio || selectionTrack != track) return;
+            UpdateAudioSelection(track, e.X);
+            selectingAudio = false;
+            pan.Capture = false;
+        };
+        pan.MouseCaptureChanged += (sender, e) => {
+            if (!pan.Capture) selectingAudio = false;
         };
         pan.DoubleClick += (sender, e) => {
             track.ToggleDisabled();
@@ -357,6 +432,14 @@ public partial class FrmMain : Form
         };
         pan.Paint += (sender, e) => {
             track.DrawSamples(e.Graphics, trackManager.DrawTimescale);
+            if (selectionTrack == track && selectionEnd > selectionStart)
+            {
+                float scale = Math.Max(1, trackManager.DrawTimescale);
+                float left = track.DrawOffset + Math.Min(selectionStart, track.SampleCount) / scale;
+                float right = track.DrawOffset + Math.Min(selectionEnd, track.SampleCount) / scale;
+                using var highlight = new SolidBrush(Color.FromArgb(90, Color.DodgerBlue));
+                e.Graphics.FillRectangle(highlight, left, 0, right - left, pan.Height);
+            }
         };
         panTracks.Controls.Add(pan);
         track.LinkPanels(pan, panTracks);
