@@ -38,6 +38,7 @@
       menuFileSave = new ToolStripMenuItem();
       menuAudioLibrary = new ToolStripMenuItem();
       menuEdit = new ToolStripMenuItem();
+      menuDeleteSelectedAudio = new ToolStripMenuItem();
       menuEditFlip = new ToolStripMenuItem();
       menuEditReverse = new ToolStripMenuItem();
       menuEditVolume = new ToolStripMenuItem();
@@ -132,7 +133,11 @@
       // 
       // menuEdit
       // 
-      menuEdit.DropDownItems.AddRange(new ToolStripItem[] { menuEditFlip, menuEditReverse, menuEditVolume, menuEditPitch, menuEditEliminateSilence });
+      menuEdit.DropDownItems.AddRange(new ToolStripItem[] { menuEditFlip, menuEditReverse, menuEditVolume, menuEditPitch, menuEditEliminateSilence, menuDeleteSelectedAudio });
+      menuDeleteSelectedAudio.Name = "menuDeleteSelectedAudio";
+      menuDeleteSelectedAudio.Text = "Delete Selected Audio";
+      menuDeleteSelectedAudio.Enabled = false;
+      menuDeleteSelectedAudio.Click += menuDeleteSelectedAudio_Click;
       menuEdit.Name = "menuEdit";
       menuEdit.Size = new Size(39, 20);
       menuEdit.Text = "E&dit";
@@ -300,6 +305,7 @@
     private OpenFileDialog ofdLoadFile;
     private MenuStrip menu;
     private ToolStripMenuItem menuEdit;
+    private ToolStripMenuItem menuDeleteSelectedAudio;
     private Button btnPlay;
     private Button btnSaveCurrentTrack;
     private ToolStripMenuItem menuEditVolume;
