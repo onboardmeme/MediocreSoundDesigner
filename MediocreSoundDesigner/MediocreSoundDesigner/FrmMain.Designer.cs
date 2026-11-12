@@ -48,6 +48,7 @@
             menuDeleteSelectedAudio = new ToolStripMenuItem();
             menuGen = new ToolStripMenuItem();
             menuGenRecord = new ToolStripMenuItem();
+            menuGenRecordAppend = new ToolStripMenuItem();
             menuGenNoise = new ToolStripMenuItem();
             menuGenGradientNoise = new ToolStripMenuItem();
             beatsToolStripMenuItem = new ToolStripMenuItem();
@@ -228,7 +229,7 @@
             // 
             // menuGen
             // 
-            menuGen.DropDownItems.AddRange(new ToolStripItem[] { menuGenRecord, menuGenNoise, menuGenGradientNoise, beatsToolStripMenuItem, menuGenInstruments });
+            menuGen.DropDownItems.AddRange(new ToolStripItem[] { menuGenRecord, menuGenRecordAppend, menuGenNoise, menuGenGradientNoise, beatsToolStripMenuItem, menuGenInstruments });
             menuGen.Name = "menuGen";
             menuGen.Size = new Size(66, 20);
             menuGen.Text = "&Generate";
@@ -240,6 +241,14 @@
             menuGenRecord.Text = "Record...";
             menuGenRecord.ToolTipText = "Records audio from the microphone.";
             menuGenRecord.Click += menuGenRecord_Click;
+            // 
+            // menuGenRecordAppend
+            // 
+            menuGenRecordAppend.Name = "menuGenRecordAppend";
+            menuGenRecordAppend.Size = new Size(152, 22);
+            menuGenRecordAppend.Text = "Record onto Track...";
+            menuGenRecordAppend.ToolTipText = "Records from the microphone and adds it to the end of the selected track.";
+            menuGenRecordAppend.Click += menuGenRecordAppend_Click;
             // 
             // menuGenNoise
             // 
@@ -584,6 +593,7 @@
     private ToolStripMenuItem menuEditEliminateSilence;
     private Label lblPlayhead;
     private ToolStripMenuItem menuGenRecord;
+    private ToolStripMenuItem menuGenRecordAppend;
     private ToolStripMenuItem beatsToolStripMenuItem;
     private ToolStripMenuItem menuFileSettings;
         private Panel panel1;

@@ -346,6 +346,24 @@ public partial class FrmMain : Form
         UpdateSizes();
         newTrack.PanDrawSamples.Invalidate();
     }
+
+    private void menuGenRecordAppend_Click(object sender, EventArgs e)
+    {
+        if (trackManager.SelectedTrack is not Track target)
+        {
+            MessageBox.Show(this, "Select a track first.", "Record onto Track", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        ClearAudioSelection();
+        FrmGenRecord frm = new() { AppendToTrack = true };
+        frm.SetSound(target);
+        if (frm.ShowDialog(this) == DialogResult.OK)
+        {
+            UpdateSizes();
+            trackManager.RedrawAll();
+        }
+    }
+
     private void menuGenGradientNoise_Click(object sender, EventArgs e)
     {
         const int NUM_SAMPLES = 250_000;

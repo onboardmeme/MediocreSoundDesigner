@@ -1,6 +1,7 @@
 ﻿using MediocreSoundDesigner.Properties;
 using NAudio.Wave;
 
+using System.ComponentModel;
 namespace MediocreSoundDesigner;
 
 /// <summary>
@@ -29,12 +30,27 @@ public partial class FrmGenRecord : FrmEditMaster {
     btnRecord.BackgroundImage = Resources.record;
   }
 
-  /// <inheritdoc/>
-  protected override void Apply() {
-    track.ReplaceSamples(recordedSamples.ToArray());
-  }
+    /// <inheritdoc/>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool AppendToTrack { get; set; }
 
-  private void btnRecord_Click(object sender, EventArgs e) {
+    protected override void Apply()
+    {
+        if (AppendToTrack)
+        {
+            float[] existing = track.CloneSamples();
+            float[] combined = new float[existing.Length + recordedSamples.Count];
+            existing.CopyTo(combined, 0);
+            recordedSamples.CopyTo(combined, existing.Length);
+            track.ReplaceSamples(combined);
+        }
+        else
+        {
+            track.ReplaceSamples(recordedSamples.ToArray());
+        }
+    }
+
+    private void btnRecord_Click(object sender, EventArgs e) {
     if (isRecording) {
       waveSource?.StopRecording();
       isRecording = false;
