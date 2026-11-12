@@ -77,6 +77,6 @@ public partial class FrmGenRecord : FrmEditMaster {
       waveSource = null;
     }
 
-    MessageBox.Show("Recording saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    MessageBox.Show("Recording created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
   }
 }

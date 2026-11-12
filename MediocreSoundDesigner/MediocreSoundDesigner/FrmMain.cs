@@ -324,7 +324,11 @@ public partial class FrmMain : Form
         frm.SetSound(trackManager.SelectedTrack);
         if (frm.ShowDialog() == DialogResult.Cancel)
         {
+            ClearAudioSelection();
             trackManager.RemTrack(newTrack);
+            panTracks.Controls.Remove(newTrack.PanDrawSamples);
+            newTrack.PanDrawSamples.Dispose();
+            UpdateSizes();
         }
     }
     private void menuGenNoise_Click(object sender, EventArgs e)
