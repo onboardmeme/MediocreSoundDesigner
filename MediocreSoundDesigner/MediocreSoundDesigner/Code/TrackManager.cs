@@ -90,17 +90,23 @@ public class TrackManager {
     CombineTracks();
     pseudoCombinedTrack.SaveToFile(filename);
   }
-  /// <summary>
-  /// Playing all of the tracks at once
-  /// </summary>
-	public void PlayAll() {
-    CombineTracks();
-    pseudoCombinedTrack.Play();
-  }
-  /// <summary>
-  /// Combining all of the tracks
-  /// </summary>
-  private void CombineTracks() {
+    /// <summary>
+    /// Playing all of the tracks at once
+    /// </summary>
+    public void PlayAll()
+    {
+        if (State == PlaybackState.Paused)
+        {
+            pseudoCombinedTrack.Resume();   // continue where we paused
+            return;
+        }
+        CombineTracks();
+        pseudoCombinedTrack.Play();         // fresh start
+    }
+    /// <summary>
+    /// Combining all of the tracks
+    /// </summary>
+    private void CombineTracks() {
     pseudoCombinedTrack?.Dispose();
     List<float> combinedSamples = new();
     foreach (Track track in Tracks) {

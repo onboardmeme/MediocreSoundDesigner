@@ -289,13 +289,20 @@ public class Track : IDisposable {
     /// Pauses the audio sample
     /// </summary>
     public void Pause() {
-    outputDevice?.Pause();
-  }
+        outputDevice?.Pause();
+    }
+    /// <summary>
+    /// Resumes a paused track from where it left off
+    /// </summary>
+    public void Resume()
+    {
+        outputDevice?.Play();
+    }
     /// <summary>
     /// Resets the audio sample
     /// </summary>
     public void Reset() {
-  }
+    }
   /// <summary>
   /// Grabs the playhead position
   /// </summary>
