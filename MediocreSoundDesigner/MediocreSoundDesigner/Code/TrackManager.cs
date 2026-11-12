@@ -48,7 +48,8 @@ public class TrackManager {
     /// <param name="track">The track to remove</param>
 	public void RemTrack(Track track) {
 		Tracks.Remove(track);
-	}
+        if (SelectedTrack == track) SelectedTrack = null; //unselects the removed track
+    }
     /// <summary>
     /// Selects a track
     /// </summary>
