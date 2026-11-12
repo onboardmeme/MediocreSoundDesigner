@@ -20,6 +20,8 @@ public partial class FrmMain : Form
     private int selectionStart;
     private int selectionEnd;
     private bool selectingAudio;
+    private bool draggingPlayhead;
+
 
     private void ClearAudioSelection()
     {
@@ -78,6 +80,20 @@ public partial class FrmMain : Form
         trackManager.DrawTimescale = trkDrawTimescale.Value;
         UpdateSizes();
         ApplySettings();
+        lblPlayhead.Cursor = Cursors.SizeWE;
+        lblPlayhead.MouseDown += (s, e) => draggingPlayhead = true;
+        lblPlayhead.MouseMove += (s, e) =>
+        {
+            if (!draggingPlayhead) return;
+            int x = panTracks.PointToClient(Cursor.Position).X;
+            lblPlayhead.Left = Math.Clamp(x, 0, panTracks.Width - lblPlayhead.Width);
+        };
+        lblPlayhead.MouseUp += (s, e) =>
+        {
+            if (!draggingPlayhead) return;
+            draggingPlayhead = false;
+            trackManager.SeekTo(lblPlayhead.Left);
+        };
     }
     private void ApplySettings()
     {
@@ -402,7 +418,7 @@ public partial class FrmMain : Form
         {
             btnPlay.BackgroundImage = trackManager.State == NAudio.Wave.PlaybackState.Playing ? Resources.pause : Resources.play;
             btnPlay.Visible = true;
-            lblPlayhead.Left = trackManager.GetPlayheadPos();
+            if (!draggingPlayhead) lblPlayhead.Left = trackManager.GetPlayheadPos();
             lblPlayhead.Visible = true;
         }
         else

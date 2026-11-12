@@ -273,18 +273,31 @@ public class Track : IDisposable {
   }
 
     // play
+    
+    private long startOffsetBytes;   // where in the audio this playback began
     /// <summary>
     /// Plays the audio sample
     /// </summary>
-    public void Play() {
-    outputDevice?.Dispose();
-    fileReader?.Dispose();
-    SaveToTempFile();
-    fileReader = new AudioFileReader(tempFilePath);
-    outputDevice = new WaveOut();
-    outputDevice.Init(fileReader);
-    outputDevice.Play();
-  }
+    public void Play(long startBytes = 0)
+    {
+        outputDevice?.Dispose();
+        fileReader?.Dispose();
+        SaveToTempFile();
+        fileReader = new AudioFileReader(tempFilePath);
+        startBytes = Math.Clamp(startBytes - startBytes % 4, 0, fileReader.Length);  // 4 bytes per float sample
+        fileReader.Position = startBytes;
+        startOffsetBytes = startBytes;
+        outputDevice = new WaveOut();
+        outputDevice.Init(fileReader);
+        outputDevice.Play();
+    }
+
+    /// <summary>Jumps to a position, staying paused if it was paused.</summary>
+    public void Seek(long bytes, bool keepPlaying)
+    {
+        Play(bytes);
+        if (!keepPlaying) outputDevice.Pause();
+    }
     /// <summary>
     /// Pauses the audio sample
     /// </summary>
@@ -303,13 +316,14 @@ public class Track : IDisposable {
     /// </summary>
     public void Reset() {
     }
-  /// <summary>
-  /// Grabs the playhead position
-  /// </summary>
-  /// <returns>The playhead position as the number of samples</returns>
-  public int GetPlayheadPos() {
-    return (int)((outputDevice?.GetPosition() ?? 0) / 4);
-  }
+    /// <summary>
+    /// Grabs the playhead position
+    /// </summary>
+    /// <returns>The playhead position as the number of samples</returns>
+    public int GetPlayheadPos()
+    {
+        return (int)(((outputDevice?.GetPosition() ?? 0) + startOffsetBytes) / 4);
+    }
     /// <summary>
     /// Switches the true/false value of IsDisabled
     /// </summary>

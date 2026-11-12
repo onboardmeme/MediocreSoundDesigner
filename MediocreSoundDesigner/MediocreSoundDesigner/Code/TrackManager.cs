@@ -98,11 +98,11 @@ public class TrackManager {
     {
         if (State == PlaybackState.Paused)
         {
-            pseudoCombinedTrack.Resume();   // continue where we paused
+            pseudoCombinedTrack.Resume();
             return;
         }
         CombineTracks();
-        pseudoCombinedTrack.Play();         // fresh start
+        pseudoCombinedTrack.Play(startSample * 4L);
     }
     /// <summary>
     /// Combining all of the tracks
@@ -131,11 +131,20 @@ public class TrackManager {
   public void PauseAll() {
     pseudoCombinedTrack?.Pause();
   }
-  /// <summary>
-  /// Getting the playhead position in terms of how far it is to the right, in pixels
-  /// </summary>
-  /// <returns>The pixel number to the right the playhead is</returns>
-  public int GetPlayheadPos() {
-    return (pseudoCombinedTrack?.GetPlayheadPos() ?? 0) / DrawTimescale;
-  }
+    /// <summary>
+    /// Getting the playhead position in terms of how far it is to the right, in pixels
+    /// </summary>
+    /// <returns>The pixel number to the right the playhead is</returns>
+    public int GetPlayheadPos()
+    {
+        if (State == PlaybackState.Stopped) return startSample / DrawTimescale;
+        return pseudoCombinedTrack.GetPlayheadPos() / DrawTimescale;
+    }
+    private int startSample;
+    public void SeekTo(int pixel)
+    {
+        startSample = pixel * DrawTimescale;
+        if (State != PlaybackState.Stopped)   // playing or paused: jump right now
+            pseudoCombinedTrack.Seek(startSample * 4L, State == PlaybackState.Playing);
+    }
 }

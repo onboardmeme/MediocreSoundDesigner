@@ -33,7 +33,9 @@ public partial class FrmGenRecord : FrmEditMaster {
     /// <inheritdoc/>
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool AppendToTrack { get; set; }
-
+    /// <summary>
+    /// Applies track changes
+    /// </summary>
     protected override void Apply()
     {
         if (AppendToTrack)

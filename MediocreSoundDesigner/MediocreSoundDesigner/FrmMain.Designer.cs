@@ -238,7 +238,7 @@
             // 
             menuGenRecord.Name = "menuGenRecord";
             menuGenRecord.Size = new Size(152, 22);
-            menuGenRecord.Text = "Record...";
+            menuGenRecord.Text = "Record new audio...";
             menuGenRecord.ToolTipText = "Records audio from the microphone.";
             menuGenRecord.Click += menuGenRecord_Click;
             // 
@@ -246,7 +246,7 @@
             // 
             menuGenRecordAppend.Name = "menuGenRecordAppend";
             menuGenRecordAppend.Size = new Size(152, 22);
-            menuGenRecordAppend.Text = "Record onto Track...";
+            menuGenRecordAppend.Text = "Record onto existing Track...";
             menuGenRecordAppend.ToolTipText = "Records from the microphone and adds it to the end of the selected track.";
             menuGenRecordAppend.Click += menuGenRecordAppend_Click;
             // 
