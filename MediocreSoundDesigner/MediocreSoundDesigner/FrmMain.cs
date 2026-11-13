@@ -1,5 +1,6 @@
 using MediocreSoundDesigner.Properties;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MediocreSoundDesigner;
 /// <summary>
@@ -94,6 +95,9 @@ public partial class FrmMain : Form
             draggingPlayhead = false;
             trackManager.SeekTo(lblPlayhead.Left);
         };
+        Click += (s, e) => ActiveControl = null;
+        panTracks.Click += (s, e) => ActiveControl = null;
+        trackRows.Click += (s, e) => ActiveControl = null;
     }
     private void ApplySettings()
     {
@@ -101,6 +105,13 @@ public partial class FrmMain : Form
         panTracks.BackColor = Settings.Color.TrackBg_Unselected;
         lblPlayhead.BackColor = Settings.Color.Playline;
         trackManager.ApplySettings();
+    }
+    private void RenumberHeaders()
+    {
+        for (int i = 0; i < trackHeaders.Count; i++)
+            foreach (var tb in trackHeaders[i].Controls.OfType<TextBox>())
+                if (Regex.IsMatch(tb.Text, @"^Track \d+$"))
+                    tb.Text = $"Track {i + 1}";
     }
 
     // GUI controls
@@ -112,6 +123,12 @@ public partial class FrmMain : Form
     /// <returns>True if the keystroke was handled, otherwise returns false</returns>
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (ActiveControl is TextBoxBase && (keyData == Keys.Enter || keyData == Keys.Escape))
+        {
+            ActiveControl = null;   // drops focus from the text box
+            return true;
+        }
+        if (ActiveControl is TextBoxBase) return base.ProcessCmdKey(ref msg, keyData);
         if (keyData == Keys.Delete && selectionTrack != null && selectionEnd > selectionStart)
         {
             menuDeleteSelectedAudio_Click(this, EventArgs.Empty);
@@ -137,11 +154,23 @@ public partial class FrmMain : Form
                 {
                     if (MessageBox.Show("This will delete the selected track. This is NOT undoable!", "Are You Sure?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation) == DialogResult.Yes)
                     {
+                        int idx = trackManager.Tracks.IndexOf(trackManager.SelectedTrack);   
+
                         ClearAudioSelection();
                         panTracks.Controls.Remove(trackManager.SelectedTrack.PanDrawSamples);
                         trackManager.SelectedTrack.PanDrawSamples.Dispose();
                         trackManager.SelectedTrack.Dispose();
                         trackManager.RemTrack(trackManager.SelectedTrack);
+
+                        if (idx >= 0 && idx < trackHeaders.Count)
+                        {
+                            var h = trackHeaders[idx];
+                            trackHeaders.RemoveAt(idx);
+                            trackHeaders.Add(h);
+                            foreach (var tb in h.Controls.OfType<TextBox>())
+                                tb.Text = "Track 0";    
+                            RenumberHeaders();
+                        }
                         UpdateSizes();
                         return true;
                     }
@@ -174,13 +203,20 @@ public partial class FrmMain : Form
     private void menuFileOpen_Click(object sender, EventArgs e)
     {
         ofdLoadFile.DefaultExt = "wav";
-        if (ofdLoadFile.ShowDialog() == DialogResult.OK)
+        try
         {
-            Track newTrack = new(ofdLoadFile.FileName);
-            CreateTrackPanel(newTrack);
-            trackManager.AddTrack(newTrack);
-            UpdateSizes();
-            newTrack.PanDrawSamples.Invalidate();
+            if (ofdLoadFile.ShowDialog() == DialogResult.OK)
+            {
+                Track newTrack = new(ofdLoadFile.FileName);
+                CreateTrackPanel(newTrack);
+                trackManager.AddTrack(newTrack);
+                UpdateSizes();
+                newTrack.PanDrawSamples.Invalidate();
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Could not open file", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
     private void menuAudioLibrary_Click(object sender, EventArgs e)
@@ -452,6 +488,7 @@ public partial class FrmMain : Form
         };
         pan.MouseDown += (sender, e) =>
         {
+            ActiveControl = null;
             if (e.Button != MouseButtons.Left) return;
             ClearAudioSelection();
             trackManager.SelectTrack(track);

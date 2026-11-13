@@ -124,7 +124,7 @@ public class Track : IDisposable {
     this.pitch = 1.0f;
     this.bits = 32;
     this.channels = 1;
-    this.sampleRate = 0;
+    this.sampleRate = 44100;
     IsDisabled = false;
   }
     /// <summary>

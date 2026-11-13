@@ -93,15 +93,17 @@ public static class Settings {
 /// <summary>
 /// Loads track from file system
 /// </summary>
-  public static void LoadFromFile() {
-    if (File.Exists(FILENAME)) {
-      JsonSerializerOptions options = new() { Converters = { new ColorJsonConverter() } };
-      Color = JsonSerializer.Deserialize<Colors>(File.ReadAllText(FILENAME), options);
+public static void LoadFromFile() {
+    try {
+        if (File.Exists(FILENAME)) {
+            JsonSerializerOptions options = new() { Converters = { new ColorJsonConverter() } };
+            Color = JsonSerializer.Deserialize<Colors>(File.ReadAllText(FILENAME), options) ?? new();
+            return;
+        }
     }
-    else {
-      Color = new();
-    }
-  }
+    catch { /* fall back to defaults */ }
+    Color = new();
+}
 /// <summary>
 /// Reverts the color to default.
 /// </summary>

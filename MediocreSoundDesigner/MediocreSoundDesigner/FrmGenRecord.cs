@@ -97,4 +97,17 @@ public partial class FrmGenRecord : FrmEditMaster {
 
     MessageBox.Show("Recording created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
   }
+  protected override void OnFormClosing(FormClosingEventArgs e)
+  {
+    if (waveSource != null)
+    {
+        waveSource.DataAvailable -= WaveSource_DataAvailable;
+        waveSource.RecordingStopped -= WaveSource_RecordingStopped;
+        waveSource.StopRecording();
+        waveSource.Dispose();
+        waveSource = null;
+        isRecording = false;
+    }
+    base.OnFormClosing(e);
+  }
 }

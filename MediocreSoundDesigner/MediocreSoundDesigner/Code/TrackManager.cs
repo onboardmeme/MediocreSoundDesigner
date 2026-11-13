@@ -42,10 +42,12 @@ public class TrackManager {
 	public void AddTrack(Track track) {
 		Tracks.Add(track);
 	}
+
     /// <summary>
     /// Removes a track
     /// </summary>
     /// <param name="track">The track to remove</param>
+    
 	public void RemTrack(Track track) {
 		Tracks.Remove(track);
         if (SelectedTrack == track) SelectedTrack = null; //unselects the removed track
