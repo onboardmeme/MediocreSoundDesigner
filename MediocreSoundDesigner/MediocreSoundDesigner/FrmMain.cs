@@ -30,7 +30,7 @@ public partial class FrmMain : Form
         selectionTrack = null;
         selectingAudio = false;
         selectionStart = selectionEnd = 0;
-        menuDeleteSelectedAudio.Enabled = false;
+        UpdateDeleteAudioButton(false);
         lblDebug.Text = "";
         if (oldTrack?.PanDrawSamples is { IsDisposed: false } panel) panel.Invalidate();
     }
@@ -43,11 +43,19 @@ public partial class FrmMain : Form
         int position = SampleAt(track, x);
         selectionStart = Math.Min(selectionAnchor, position);
         selectionEnd = Math.Max(selectionAnchor, position);
-        menuDeleteSelectedAudio.Enabled = selectionEnd > selectionStart;
+        UpdateDeleteAudioButton(selectionEnd > selectionStart);
         lblDebug.Text = selectionEnd > selectionStart
-            ? $"Selected: {selectionStart / 44100.0:F2}s – {selectionEnd / 44100.0:F2}s | Edit > Delete Selected Audio"
+            ? $"Selected: {selectionStart / 44100.0:F2}s – {selectionEnd / 44100.0:F2}s | Click Delete Selected Audio or press Delete"
             : "Drag across a waveform to select audio.";
         track.PanDrawSamples.Invalidate();
+    }
+
+    private void UpdateDeleteAudioButton(bool hasSelection)
+    {
+        menuDeleteSelectedAudio.Enabled = hasSelection;
+        btnDeleteAudio.Enabled = hasSelection;
+        btnDeleteAudio.BackColor = hasSelection ? SystemColors.Control : Color.FromArgb(80, 80, 80);
+        btnDeleteAudio.ForeColor = hasSelection ? SystemColors.ControlText : Color.Gray;
     }
 
     private void menuDeleteSelectedAudio_Click(object sender, EventArgs e)
@@ -68,7 +76,28 @@ public partial class FrmMain : Form
     public FrmMain()
     {
         InitializeComponent();
+        SetupToolbarIcons();
         Setup();
+    }
+
+    private void SetupToolbarIcons()
+    {
+        ToolbarIcons.Apply(btnOpenAudio, ToolbarIcons.Action.Open);
+        ToolbarIcons.Apply(btnSaveAudio, ToolbarIcons.Action.Save);
+        ToolbarIcons.Apply(btnAudioLibrary, ToolbarIcons.Action.Library);
+        ToolbarIcons.Apply(btnSaveCurrentTrack, ToolbarIcons.Action.SaveTrack);
+        ToolbarIcons.Apply(btnSettings, ToolbarIcons.Action.Settings);
+        ToolbarIcons.Apply(btnRecordNew, ToolbarIcons.Action.Record);
+        ToolbarIcons.Apply(btnRecordAppend, ToolbarIcons.Action.Append);
+        ToolbarIcons.Apply(btnNoise, ToolbarIcons.Action.Noise);
+        ToolbarIcons.Apply(btnBeats, ToolbarIcons.Action.Beats);
+        ToolbarIcons.Apply(btnInstruments, ToolbarIcons.Action.Instruments);
+        ToolbarIcons.Apply(btnFlip, ToolbarIcons.Action.Flip);
+        ToolbarIcons.Apply(btnReverse, ToolbarIcons.Action.Reverse);
+        ToolbarIcons.Apply(btnVolume, ToolbarIcons.Action.Volume);
+        ToolbarIcons.Apply(btnPitch, ToolbarIcons.Action.Pitch);
+        ToolbarIcons.Apply(btnEliminateSilence, ToolbarIcons.Action.Silence);
+        ToolbarIcons.Apply(btnDeleteAudio, ToolbarIcons.Action.Delete);
     }
 
     // setup
@@ -250,7 +279,7 @@ public partial class FrmMain : Form
         try
         {
             new AudioLibrary().SaveClip(name, selected);
-            MessageBox.Show(this, "Track saved. Open File > Audio Library to reuse it.", "Save Current Track");
+            MessageBox.Show(this, "Track saved. Click Audio Library to reuse it.", "Save Current Track");
         }
         catch (Exception ex)
         {
@@ -383,6 +412,11 @@ public partial class FrmMain : Form
             UpdateSizes();
         }
     }
+    private void btnNoise_Click(object sender, EventArgs e)
+    {
+        noiseMenu.Show(btnNoise, new Point(0, btnNoise.Height));
+    }
+
     private void menuGenNoise_Click(object sender, EventArgs e)
     {
         const int NUM_SAMPLES = 100_000;
