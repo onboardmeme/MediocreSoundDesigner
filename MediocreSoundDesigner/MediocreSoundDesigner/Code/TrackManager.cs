@@ -111,6 +111,14 @@ public class TrackManager {
     /// <summary>
     /// Combining all of the tracks
     /// </summary>
+    /// <summary>Rebuilds the current mix and starts playback from the beginning.</summary>
+    public void RestartAll()
+    {
+        startSample = 0;
+        CombineTracks();
+        pseudoCombinedTrack.Play();
+    }
+
     private void CombineTracks()
     {
         pseudoCombinedTrack?.Dispose();

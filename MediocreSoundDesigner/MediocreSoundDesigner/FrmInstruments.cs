@@ -29,6 +29,8 @@ public partial class FrmInstruments : Form
         InitializeComponent();
         lstInstruments.SelectedIndex = 0;
         lstInstruments.SelectedIndexChanged += (_, _) => StopPreview();
+        DialogTheme.Build(this, "Instruments", "Preview a sound, then add it to your audio tracks.",
+            new[] { ("", (Control)lstInstruments) }, btnPreview, btnStop, btnClose, btnAdd);
     }
     /// <summary>
     /// Gets the full path of the selected instrument file.

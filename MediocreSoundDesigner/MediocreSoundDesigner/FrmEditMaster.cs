@@ -34,6 +34,7 @@ public partial class FrmEditMaster : Form {
   protected void ApplySettings() {
     BackColor = Settings.Color.WinBg;
     ForeColor = Settings.Color.WinFg;
+    foreach (Control control in Controls) control.BackColor = BackColor;
   }
   /// <summary>
   /// Cancels and closes the dialog box

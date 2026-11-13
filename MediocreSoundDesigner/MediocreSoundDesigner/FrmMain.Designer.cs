@@ -55,12 +55,15 @@
             beatsToolStripMenuItem = new ToolStripMenuItem();
             menuGenInstruments = new ToolStripMenuItem();
             btnPlay = new Button();
+            btnRestart = new Button();
             btnSaveCurrentTrack = new Button();
             btnOpenAudio = new Button();
             btnSaveAudio = new Button();
             btnAudioLibrary = new Button();
             btnSettings = new Button();
             fileActionsDivider = new Panel();
+            playbackDividerLeft = new Panel();
+            playbackDividerRight = new Panel();
             btnFlip = new Button();
             btnReverse = new Button();
             btnVolume = new Button();
@@ -319,6 +322,15 @@
             btnPlay.TabIndex = 6;
             btnPlay.UseVisualStyleBackColor = false;
             btnPlay.Click += btnPlay_Click;
+            btnRestart.Location = new Point(822, 34);
+            btnRestart.Name = "btnRestart";
+            btnRestart.Size = new Size(40, 32);
+            btnRestart.AccessibleName = "Restart Playback";
+            btnRestart.TabIndex = 36;
+            btnRestart.Enabled = false;
+            btnRestart.UseVisualStyleBackColor = true;
+            toolbarToolTip.SetToolTip(btnRestart, "Restart Playback from Beginning");
+            btnRestart.Click += btnRestart_Click;
             // 
             // btnSaveCurrentTrack
             // 
@@ -428,6 +440,14 @@
             fileActionsDivider.Location = new Point(262, 32);
             fileActionsDivider.Size = new Size(2, 36);
             fileActionsDivider.BackColor = Color.Gray;
+            playbackDividerLeft.Name = "playbackDividerLeft";
+            playbackDividerLeft.Location = new Point(809, 32);
+            playbackDividerLeft.Size = new Size(2, 36);
+            playbackDividerLeft.BackColor = Color.Gray;
+            playbackDividerRight.Name = "playbackDividerRight";
+            playbackDividerRight.Location = new Point(913, 32);
+            playbackDividerRight.Size = new Size(2, 36);
+            playbackDividerRight.BackColor = Color.Gray;
             btnFlip.Location = new Point(923, 34);
             btnFlip.Name = "btnFlip";
             btnFlip.Size = new Size(40, 32);
@@ -710,6 +730,7 @@
             Controls.Add(panel2);
             Controls.Add(panel1);
             Controls.Add(btnPlay);
+            Controls.Add(btnRestart);
             Controls.Add(trkDrawTimescale);
             Controls.Add(btnSaveCurrentTrack);
             Controls.Add(btnOpenAudio);
@@ -722,6 +743,8 @@
             Controls.Add(btnBeats);
             Controls.Add(btnInstruments);
             Controls.Add(fileActionsDivider);
+            Controls.Add(playbackDividerLeft);
+            Controls.Add(playbackDividerRight);
             Controls.Add(btnFlip);
             Controls.Add(btnReverse);
             Controls.Add(btnVolume);
@@ -771,6 +794,7 @@
     private ToolStripMenuItem menuEdit;
     private ToolStripMenuItem menuDeleteSelectedAudio;
     private Button btnPlay;
+    private Button btnRestart;
     private Button btnSaveCurrentTrack;
     private Button btnOpenAudio;
     private Button btnSaveAudio;
@@ -784,6 +808,8 @@
     private Button btnBeats;
     private Button btnInstruments;
     private Panel fileActionsDivider;
+    private Panel playbackDividerLeft;
+    private Panel playbackDividerRight;
     private Button btnFlip;
     private Button btnReverse;
     private Button btnVolume;

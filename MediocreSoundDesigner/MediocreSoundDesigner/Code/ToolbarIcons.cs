@@ -5,7 +5,7 @@ namespace MediocreSoundDesigner;
 /// <summary>Draws consistent toolbar symbols without relying on font glyphs.</summary>
 internal static class ToolbarIcons
 {
-    internal enum Action { Open, Save, Library, SaveTrack, Settings, Record, Append, Noise, Beats, Instruments, Flip, Reverse, Volume, Pitch, Silence, Delete }
+    internal enum Action { Open, Save, Library, SaveTrack, Settings, Record, Append, Noise, Beats, Instruments, Flip, Reverse, Volume, Pitch, Silence, Delete, Restart }
 
     internal static void Apply(Button button, Action action)
     {
@@ -41,6 +41,10 @@ internal static class ToolbarIcons
             }
             switch (action)
             {
+                case Action.Restart:
+                    Line(4, 4, 4, 20);
+                    graphics.FillPolygon(brush, new PointF[] { new(19, 4), new(7, 12), new(19, 20) });
+                    break;
                 case Action.Open:
                     Poly(new(2, 18), new(2, 5), new(9, 5), new(12, 8), new(21, 8), new(21, 10));
                     graphics.DrawPolygon(pen, new PointF[] { new(2, 19), new(5, 10), new(23, 10), new(19, 19) });

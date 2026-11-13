@@ -82,6 +82,7 @@ public partial class FrmMain : Form
 
     private void SetupToolbarIcons()
     {
+        ToolbarIcons.Apply(btnRestart, ToolbarIcons.Action.Restart);
         ToolbarIcons.Apply(btnOpenAudio, ToolbarIcons.Action.Open);
         ToolbarIcons.Apply(btnSaveAudio, ToolbarIcons.Action.Save);
         ToolbarIcons.Apply(btnAudioLibrary, ToolbarIcons.Action.Library);
@@ -106,7 +107,18 @@ public partial class FrmMain : Form
         DoubleBuffered = true;
         SetupTrackRows();
         trackManager = new(panTracks);
-        btnPlay.BackgroundImage = Resources.play;
+        btnPlay.Enabled = false;
+        btnPlay.BackgroundImage = null;
+        btnPlay.Paint += (_, e) =>
+        {
+            if (btnPlay.Enabled) return;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            using var gray = new SolidBrush(Color.Gray);
+            float cx = btnPlay.ClientSize.Width / 2f;
+            float cy = btnPlay.ClientSize.Height / 2f;
+            e.Graphics.FillPolygon(gray, new PointF[] {
+                new(cx - 7, cy - 10), new(cx + 9, cy), new(cx - 7, cy + 10) });
+        };
         trackManager.DrawTimescale = trkDrawTimescale.Value;
         UpdateSizes();
         ApplySettings();
@@ -215,6 +227,21 @@ public partial class FrmMain : Form
         UpdateSizes();
     }
 
+    private void btnRestart_Click(object sender, EventArgs e)
+    {
+        if (trackManager.Tracks.Count == 0) return;
+        try
+        {
+            trackManager.RestartAll();
+            lblPlayhead.Left = 0;
+            btnPlay.BackgroundImage = Resources.pause;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not restart playback: {ex.Message}", "Playback", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
     private void btnPlay_Click(object sender, EventArgs e)
     {
         if (trackManager.State is NAudio.Wave.PlaybackState.Stopped or NAudio.Wave.PlaybackState.Paused)
@@ -273,8 +300,9 @@ public partial class FrmMain : Form
             MessageBox.Show(this, "Select a track to save first.", "Save Current Track");
             return;
         }
-        string name = Microsoft.VisualBasic.Interaction.InputBox(
-            "Name this clip to save it in your audio library:", "Save Current Track", "");
+        using var prompt = new FrmTextPrompt("Save Current Track", "Give this clip a name so you can reuse it from your audio library.");
+        if (prompt.ShowDialog(this) != DialogResult.OK) return;
+        string name = prompt.Value;
         if (string.IsNullOrWhiteSpace(name)) return;
         try
         {
@@ -294,11 +322,13 @@ public partial class FrmMain : Form
         {
             trackManager.SaveToFile(sfdSaveFile.FileName);
 
+            using var artistPrompt = new FrmTextPrompt("Export Details", "Enter an artist name for your exported audio.");
+            string artist = artistPrompt.ShowDialog(this) == DialogResult.OK ? artistPrompt.Value : "";
             // tag the file we just wrote
             new WavMetadata
             {
                 Title = Path.GetFileNameWithoutExtension(sfdSaveFile.FileName),
-                Artist = Microsoft.VisualBasic.Interaction.InputBox("Artist name:", "Export", "Your Name Here"),
+                Artist = artist,
                 Year = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss")
             }.AppendTo(sfdSaveFile.FileName);
         }
@@ -414,6 +444,7 @@ public partial class FrmMain : Form
     }
     private void btnNoise_Click(object sender, EventArgs e)
     {
+        DialogTheme.StyleMenu(noiseMenu);
         noiseMenu.Show(btnNoise, new Point(0, btnNoise.Height));
     }
 
@@ -484,17 +515,17 @@ public partial class FrmMain : Form
 
     private void tmrUpdatePlaybackState_Tick(object sender, EventArgs e)
     {
+        btnRestart.Enabled = trackManager.Tracks.Count > 0;
+        btnPlay.Enabled = trackManager.Tracks.Count > 0;
         if (trackManager.Tracks.Count > 0)
         {
             btnPlay.BackgroundImage = trackManager.State == NAudio.Wave.PlaybackState.Playing ? Resources.pause : Resources.play;
-            btnPlay.Visible = true;
             if (!draggingPlayhead) lblPlayhead.Left = trackManager.GetPlayheadPos();
             lblPlayhead.Visible = true;
         }
         else
         {
             btnPlay.BackgroundImage = null;
-            btnPlay.Visible = false;
             lblPlayhead.Visible = false;
         }
     }

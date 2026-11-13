@@ -10,6 +10,12 @@ public partial class FrmEditSettings : FrmEditMaster
     public FrmEditSettings()
     {
         InitializeComponent();
+        btnRevertToDefault.Text = "Restore Defaults";
+        DialogTheme.Build(this, "Appearance Settings", "Choose colors for the editor, tracks, and playback cursor.",
+            new[] { ("Window background", (Control)btnColorWinBg), ("Window text", (Control)btnColorWinFg),
+                ("Waveform", (Control)btnColorTrackSamples), ("Muted waveform", (Control)btnColorTrackSamplesDisabled),
+                ("Selected track", (Control)btnColorTrackBgSelected), ("Unselected track", (Control)btnColorTrackBgUnselected),
+                ("Playhead", (Control)btnPlayline) }, btnRevertToDefault, btnCancel, btnApply);
     }
     /// <inheritdoc/>
     protected override void Init()

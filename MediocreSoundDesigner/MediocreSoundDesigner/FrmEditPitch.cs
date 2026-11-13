@@ -10,6 +10,8 @@ public partial class FrmEditPitch : FrmEditMaster
     public FrmEditPitch()
     {
         InitializeComponent();
+        DialogTheme.Build(this, "Track Pitch", "Raise or lower pitch in semitones. This also changes the track's length.",
+            new[] { ("Semitones", (Control)nudSemitones) }, btnCancel, btnApply);
     }
 
     /// <inheritdoc/>

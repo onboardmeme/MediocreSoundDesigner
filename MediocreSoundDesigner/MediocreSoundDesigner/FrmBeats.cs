@@ -14,6 +14,8 @@ public partial class FrmBeats : Form
         InitializeComponent();
         lstBeats.Items.AddRange(new object[] { "Beat 1", "Beat 2", "Beat 3", "Beat 4" });
         lstBeats.SelectedIndex = 0;
+        DialogTheme.Build(this, "Premade Beats", "Choose a beat to add as a new audio track.",
+            new[] { ("", (Control)lstBeats) }, btnCancel, btnAdd);
     }
 
     private void btnAdd_Click(object sender, EventArgs e)

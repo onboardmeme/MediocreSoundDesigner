@@ -18,6 +18,16 @@ public partial class FrmGenRecord : FrmEditMaster {
   /// </summary>
   public FrmGenRecord() {
     InitializeComponent();
+    DialogTheme.Build(this, "Record Audio", "Use the record control to start or stop microphone capture.",
+        new[] { ("Record / Stop", (Control)btnRecord) }, btnCancel, btnApply);
+    btnRecord.Paint += (_, e) =>
+    {
+        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        var bounds = new Rectangle((btnRecord.ClientSize.Width - 18) / 2, (btnRecord.ClientSize.Height - 18) / 2, 18, 18);
+        using var brush = new SolidBrush(Color.FromArgb(190, 40, 45));
+        if (isRecording) e.Graphics.FillRectangle(brush, bounds);
+        else e.Graphics.FillEllipse(brush, bounds);
+    };
   }
     /// <summary>
     /// Initializes the computer recording software. Clears previous samples, sets recording to false, and sets up
@@ -27,7 +37,7 @@ public partial class FrmGenRecord : FrmEditMaster {
     base.Init();
     recordedSamples = new();
     isRecording = false;
-    btnRecord.BackgroundImage = Resources.record;
+    UpdateRecordButton();
   }
 
     /// <inheritdoc/>
@@ -56,12 +66,12 @@ public partial class FrmGenRecord : FrmEditMaster {
     if (isRecording) {
       waveSource?.StopRecording();
       isRecording = false;
-      btnRecord.BackgroundImage = Resources.record;
+      UpdateRecordButton();
     }
     else {
       try {
         isRecording = true;
-        btnRecord.BackgroundImage = Resources.stop;
+        UpdateRecordButton();
 
         waveSource = new();
         waveSource.WaveFormat = new WaveFormat(44100, 1);
@@ -72,9 +82,19 @@ public partial class FrmGenRecord : FrmEditMaster {
         waveSource.StartRecording();
       }
       catch (Exception ex) {
+        isRecording = false;
+        UpdateRecordButton();
         MessageBox.Show($"Failed to start recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
     }
+  }
+
+  private void UpdateRecordButton()
+  {
+    btnRecord.BackgroundImage = null;
+    btnRecord.Text = "";
+    btnRecord.AccessibleName = isRecording ? "Stop Recording" : "Start Recording";
+    btnRecord.Invalidate();
   }
 
   private void WaveSource_DataAvailable(object sender, WaveInEventArgs e) {
@@ -89,6 +109,8 @@ public partial class FrmGenRecord : FrmEditMaster {
 
   // Executed automatically after StopRecording() has completed
   private void WaveSource_RecordingStopped(object sender, StoppedEventArgs e) {
+    isRecording = false;
+    UpdateRecordButton();
     // Safely dispose of resources in the correct order
     if (waveSource != null) {
       waveSource.Dispose();
