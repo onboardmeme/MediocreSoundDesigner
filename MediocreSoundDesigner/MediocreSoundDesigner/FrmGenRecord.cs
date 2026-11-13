@@ -97,6 +97,11 @@ public partial class FrmGenRecord : FrmEditMaster {
 
     MessageBox.Show("Recording created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
   }
+  /// <summary>
+  /// Stops and releases the microphone if the dialog is closed while still recording,
+  /// so the recording device isn't left running in the background.
+  /// </summary>
+  /// <param name="e">Details about the form closing event</param>
   protected override void OnFormClosing(FormClosingEventArgs e)
   {
     if (waveSource != null)

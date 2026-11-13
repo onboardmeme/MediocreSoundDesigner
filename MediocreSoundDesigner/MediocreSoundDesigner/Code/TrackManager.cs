@@ -85,14 +85,16 @@ public class TrackManager {
     }
     RedrawAll();
   }
-  /// <summary>
-  /// Saving the track to a file
-  /// </summary>
-  /// <param name="filename">The output filename</param>
-  public void SaveToFile(string filename) {
-    CombineTracks();
-    pseudoCombinedTrack.SaveToFile(filename);
-  }
+    /// <summary>
+    /// Saving the track to a file
+    /// </summary>
+    /// <param name="filename">The output filename</param>
+    public void SaveToFile(string filename)
+    {
+        Track mix = BuildMix();
+        mix.SaveToFile(filename);
+        mix.Dispose();
+    }
     /// <summary>
     /// Playing all of the tracks at once
     /// </summary>
@@ -109,28 +111,32 @@ public class TrackManager {
     /// <summary>
     /// Combining all of the tracks
     /// </summary>
-    private void CombineTracks() {
-    pseudoCombinedTrack?.Dispose();
-    List<float> combinedSamples = new();
-    foreach (Track track in Tracks) {
-      if (track.IsDisabled) {
-        continue;
-      }
-      float[] trackSamples = (float[])track.GetAdjustedSamples().Clone();
-      for (int i = 0; i < trackSamples.Length; i++) {
-        if (combinedSamples.Count <= i) {
-          combinedSamples.Add(0);
-        }
-        combinedSamples[i] += trackSamples[i];
-      }
+    private void CombineTracks()
+    {
+        pseudoCombinedTrack?.Dispose();
+        pseudoCombinedTrack = BuildMix();
     }
-    pseudoCombinedTrack = new(combinedSamples.ToArray());
-    pseudoCombinedTrack.LinkPanels(null, panContainer);
-  }
-  /// <summary>
-  /// Pausing all of the tracks
-  /// </summary>
-  public void PauseAll() {
+    private Track BuildMix()
+    {
+        List<float> combinedSamples = new();
+        foreach (Track track in Tracks)
+        {
+            if (track.IsDisabled) continue;
+            float[] trackSamples = track.GetAdjustedSamples();
+            for (int i = 0; i < trackSamples.Length; i++)
+            {
+                if (combinedSamples.Count <= i) combinedSamples.Add(0);
+                combinedSamples[i] += trackSamples[i];
+            }
+        }
+        Track mix = new(combinedSamples.Select(s => Math.Clamp(s, -1f, 1f)).ToArray());
+        mix.LinkPanels(null, panContainer);
+        return mix;
+    }
+    /// <summary>
+    /// Pausing all of the tracks
+    /// </summary>
+    public void PauseAll() {
     pseudoCombinedTrack?.Pause();
   }
     /// <summary>
@@ -143,6 +149,10 @@ public class TrackManager {
         return pseudoCombinedTrack.GetPlayheadPos() / DrawTimescale;
     }
     private int startSample;
+    /// <summary>
+    /// Moves the playback position
+    /// </summary>
+    /// <param name="pixel"></param>
     public void SeekTo(int pixel)
     {
         startSample = pixel * DrawTimescale;

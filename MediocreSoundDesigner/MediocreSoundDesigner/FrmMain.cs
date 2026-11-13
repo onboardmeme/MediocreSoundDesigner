@@ -36,7 +36,7 @@ public partial class FrmMain : Form
     }
 
     private int SampleAt(Track track, int x) => (int)Math.Clamp(
-        ((long)x - track.DrawOffset) * Math.Max(1, trackManager.DrawTimescale), 0L, track.SampleCount);
+        (long)x * Math.Max(1, trackManager.DrawTimescale) - track.OffsetSamples, 0L, track.SampleCount);
 
     private void UpdateAudioSelection(Track track, int x)
     {
@@ -138,13 +138,13 @@ public partial class FrmMain : Form
         {
             if (keyData == Keys.Left)
             {
-                trackManager.SelectedTrack.ShiftSampleOver(-5);
+                trackManager.SelectedTrack.ShiftSampleOver(-5, trackManager.DrawTimescale);
                 trackManager.SelectedTrack.PanDrawSamples.Invalidate();
                 return true;
             }
             else if (keyData == Keys.Right)
             {
-                trackManager.SelectedTrack.ShiftSampleOver(+5);
+                trackManager.SelectedTrack.ShiftSampleOver(+5, trackManager.DrawTimescale);
                 trackManager.SelectedTrack.PanDrawSamples.Invalidate();
                 return true;
             }
@@ -524,8 +524,8 @@ public partial class FrmMain : Form
             if (selectionTrack == track && selectionEnd > selectionStart)
             {
                 float scale = Math.Max(1, trackManager.DrawTimescale);
-                float left = track.DrawOffset + Math.Min(selectionStart, track.SampleCount) / scale;
-                float right = track.DrawOffset + Math.Min(selectionEnd, track.SampleCount) / scale;
+                float left = (track.OffsetSamples + Math.Min(selectionStart, track.SampleCount)) / scale;
+                float right = (track.OffsetSamples + Math.Min(selectionEnd, track.SampleCount)) / scale;
                 using var highlight = new SolidBrush(Color.FromArgb(90, Color.DodgerBlue));
                 e.Graphics.FillRectangle(highlight, left, 0, right - left, pan.Height);
             }

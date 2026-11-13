@@ -63,7 +63,7 @@ public partial class FrmInstruments : Form
         catch (Exception ex)
         {
             StopPreview();
-            MessageBox.Show(this, $"Error", "Instruments", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, $"Error: {ex.Message}", "Instruments", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 

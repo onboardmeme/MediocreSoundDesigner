@@ -33,27 +33,23 @@ public class Track : IDisposable {
   // Fields
   private string file;
   private TimeSpan duration;
-  private float offset;
-  private float timeScale;
   private int sampleRate;
   private float[] samples;
   private float pitch;
-  private int bits;
   private int channels;
   private AudioFileReader fileReader;
   private WaveOut outputDevice;
   private Panel panContainer;
   private int drawTimescale;
 
-    // properties
+/// <summary>
+/// How far the track is shifted to the right, in samples (so it doesn't change when you zoom)
+/// </summary>
+    public int OffsetSamples { get; set; }
     /// <summary>
-    /// Offset for how far the track is shifted over to the right in pixels
+    /// Wether or not the track is currently muted
     /// </summary>
-    public int DrawOffset { get; set; }
-  /// <summary>
-  /// Wether or not the track is currently muted
-  /// </summary>
-  public bool IsDisabled { get; private set; }
+    public bool IsDisabled { get; private set; }
 
   /// <summary>
   /// Panel that the waveforms of the track are drawn on.
@@ -101,11 +97,8 @@ public class Track : IDisposable {
 
         this.file = file;
         this.duration = reader.TotalTime;
-        this.offset = 0;
-        this.timeScale = 1.0f;
         this.Volume = 1.0f;
         this.pitch = 1.0f;
-        this.bits = 32;
         this.channels = 1;
         this.sampleRate = 44100;
         IsDisabled = false;
@@ -118,11 +111,8 @@ public class Track : IDisposable {
 
     this.file = "";
     this.duration = TimeSpan.Zero;
-    this.offset = 0;
-    this.timeScale = 1.0f;
     this.Volume = 1.0f;
     this.pitch = 1.0f;
-    this.bits = 32;
     this.channels = 1;
     this.sampleRate = 44100;
     IsDisabled = false;
@@ -354,29 +344,26 @@ public class Track : IDisposable {
     for (int s = 0; s < samples.Length; s++) {
       adjSamples[s] = samples[s] * Volume;
     }
-    float[] deadSpace = new float[DrawOffset * drawTimescale];
-    for (int i = 0; i < DrawOffset; i++) {
-      deadSpace[i] = 0.0f;
-    }
-
+    float[] deadSpace = new float[OffsetSamples];
     return [.. deadSpace, .. adjSamples];
   }
 
-  // render
-  /// <summary>
-  /// Moves the sample
-  /// </summary>
-  /// <param name="amount">The amount moved</param>
-  public void ShiftSampleOver(int amount) {
-    DrawOffset += amount;
-    DrawOffset = Math.Max(0, DrawOffset);
-  }
-  /// <summary>
-  /// Draws the strack's waveform onto its panel
-  /// </summary>
-  /// <param name="g">Graphics surface to draw on.</param>
-  /// <param name="drawTimescale">How far along the sample is</param>
-  public void DrawSamples(Graphics g, int drawTimescale) {
+    // render
+    /// <summary>
+    /// Moves the sample
+    /// </summary>
+    /// <param name="pixels">The amount moved</param>
+    /// <param name="timescale">The current zoom level</param>
+    public void ShiftSampleOver(int pixels, int timescale)
+    {
+        OffsetSamples = Math.Max(0, OffsetSamples + pixels * Math.Max(1, timescale));
+    }
+    /// <summary>
+    /// Draws the strack's waveform onto its panel
+    /// </summary>
+    /// <param name="g">Graphics surface to draw on.</param>
+    /// <param name="drawTimescale">How far along the sample is</param>
+    public void DrawSamples(Graphics g, int drawTimescale) {
     if (PanDrawSamples is null) {
       return;
     }
@@ -384,7 +371,7 @@ public class Track : IDisposable {
     this.drawTimescale = drawTimescale;
     float heightAdj = PanDrawSamples.Height / 2;
     if (samples != null && samples.Length > 0) {
-      int x = DrawOffset;
+      int x = OffsetSamples / Math.Max(1, drawTimescale);
       Pen pen = new(IsDisabled ? Settings.Color.TrackSamples_Disabled : Settings.Color.TrackSamples_Enabled);
       List<Point> points = new();
       for (int s = 0; s < samples.Length; s += drawTimescale) {

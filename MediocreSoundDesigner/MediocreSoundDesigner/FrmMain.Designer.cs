@@ -224,7 +224,7 @@
             menuDeleteSelectedAudio.Enabled = false;
             menuDeleteSelectedAudio.Name = "menuDeleteSelectedAudio";
             menuDeleteSelectedAudio.Size = new Size(189, 22);
-            menuDeleteSelectedAudio.Text = "Delete Selected Audio";
+            menuDeleteSelectedAudio.Text = "Delete Selected Audio...";
             menuDeleteSelectedAudio.Click += menuDeleteSelectedAudio_Click;
             // 
             // menuGen
@@ -270,7 +270,7 @@
             // 
             beatsToolStripMenuItem.Name = "beatsToolStripMenuItem";
             beatsToolStripMenuItem.Size = new Size(152, 22);
-            beatsToolStripMenuItem.Text = "Beats";
+            beatsToolStripMenuItem.Text = "Beats...";
             beatsToolStripMenuItem.ToolTipText = "Choose a premade beat to add as a new track.";
             beatsToolStripMenuItem.Click += menuGenBeats_Click;
             // 
@@ -278,7 +278,7 @@
             // 
             menuGenInstruments.Name = "menuGenInstruments";
             menuGenInstruments.Size = new Size(152, 22);
-            menuGenInstruments.Text = "Instruments";
+            menuGenInstruments.Text = "Instruments...";
             menuGenInstruments.ToolTipText = "View instruments for beat creation.";
             menuGenInstruments.Click += menuGenInstruments_Click;
             // 
@@ -302,11 +302,11 @@
             // 
             // btnSaveCurrentTrack
             // 
-            btnSaveCurrentTrack.Location = new Point(1464, 34);
+            btnSaveCurrentTrack.Location = new Point(1300, 34);
             btnSaveCurrentTrack.Name = "btnSaveCurrentTrack";
-            btnSaveCurrentTrack.Size = new Size(126, 32);
+            btnSaveCurrentTrack.Size = new Size(150, 32);
             btnSaveCurrentTrack.TabIndex = 8;
-            btnSaveCurrentTrack.Text = "Save Current Track";
+            btnSaveCurrentTrack.Text = "Save Current Track...";
             btnSaveCurrentTrack.UseVisualStyleBackColor = true;
             btnSaveCurrentTrack.Click += btnSaveCurrentTrack_Click;
             // 
