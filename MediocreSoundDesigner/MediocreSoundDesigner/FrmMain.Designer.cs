@@ -56,6 +56,8 @@
             menuGenInstruments = new ToolStripMenuItem();
             btnPlay = new Button();
             btnRestart = new Button();
+            btnHelp = new Button();
+            lblPlaybackTime = new Label();
             btnSaveCurrentTrack = new Button();
             btnOpenAudio = new Button();
             btnSaveAudio = new Button();
@@ -331,6 +333,18 @@
             btnRestart.UseVisualStyleBackColor = true;
             toolbarToolTip.SetToolTip(btnRestart, "Restart Playback from Beginning");
             btnRestart.Click += btnRestart_Click;
+            // Elapsed audio time, between Generate and playback controls.
+            lblPlaybackTime.Name = "lblPlaybackTime";
+            lblPlaybackTime.Location = new Point(551, 30);
+            lblPlaybackTime.Size = new Size(218, 38);
+            lblPlaybackTime.Font = new Font("Consolas", 20F, FontStyle.Regular, GraphicsUnit.Point);
+            lblPlaybackTime.BackColor = Color.FromArgb(35, 35, 35);
+            lblPlaybackTime.ForeColor = Color.WhiteSmoke;
+            lblPlaybackTime.BorderStyle = BorderStyle.FixedSingle;
+            lblPlaybackTime.TextAlign = ContentAlignment.MiddleCenter;
+            lblPlaybackTime.Text = "00:00:00.00";
+            lblPlaybackTime.AccessibleName = "Playback elapsed time";
+            toolbarToolTip.SetToolTip(lblPlaybackTime, "Playback time — hours:minutes:seconds.hundredths");
             // 
             // btnSaveCurrentTrack
             // 
@@ -511,6 +525,20 @@
             btnDeleteAudio.UseVisualStyleBackColor = false;
             toolbarToolTip.SetToolTip(btnDeleteAudio, "Delete Selected Audio");
             btnDeleteAudio.Click += menuDeleteSelectedAudio_Click;
+            btnHelp.Name = "btnHelp";
+            btnHelp.Location = new Point(1549, 34);
+            btnHelp.Size = new Size(40, 32);
+            btnHelp.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnHelp.Text = "?";
+            btnHelp.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            btnHelp.FlatStyle = FlatStyle.Flat;
+            btnHelp.FlatAppearance.BorderSize = 0;
+            btnHelp.BackColor = Color.FromArgb(196, 200, 203);
+            btnHelp.ForeColor = Color.Black;
+            btnHelp.AccessibleName = "Help — User Guide";
+            btnHelp.TabIndex = 37;
+            toolbarToolTip.SetToolTip(btnHelp, "Help — User Guide (F1)");
+            btnHelp.Click += btnHelp_Click;
             // 
             // tmrUpdate
             // 
@@ -731,6 +759,8 @@
             Controls.Add(panel1);
             Controls.Add(btnPlay);
             Controls.Add(btnRestart);
+            Controls.Add(btnHelp);
+            Controls.Add(lblPlaybackTime);
             Controls.Add(trkDrawTimescale);
             Controls.Add(btnSaveCurrentTrack);
             Controls.Add(btnOpenAudio);
@@ -795,6 +825,8 @@
     private ToolStripMenuItem menuDeleteSelectedAudio;
     private Button btnPlay;
     private Button btnRestart;
+    private Button btnHelp;
+    private Label lblPlaybackTime;
     private Button btnSaveCurrentTrack;
     private Button btnOpenAudio;
     private Button btnSaveAudio;

@@ -54,8 +54,14 @@ public partial class FrmEditSettings : FrmEditMaster
 
     private void btnRevertToDefault_Click(object sender, EventArgs e)
     {
-        Settings.RevertToDefault();
-        Init();
+        var defaults = new Settings.Colors();
+        btnColorWinBg.BackColor = defaults.WinBg;
+        btnColorWinFg.BackColor = defaults.WinFg;
+        btnColorTrackSamples.BackColor = defaults.TrackSamples_Enabled;
+        btnColorTrackSamplesDisabled.BackColor = defaults.TrackSamples_Disabled;
+        btnColorTrackBgSelected.BackColor = defaults.TrackBg_Selected;
+        btnColorTrackBgUnselected.BackColor = defaults.TrackBg_Unselected;
+        btnPlayline.BackColor = defaults.Playline;
     }
 
     private void label6_Click(object sender, EventArgs e)

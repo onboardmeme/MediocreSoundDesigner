@@ -15,7 +15,7 @@ public partial class FrmInstruments : Form
         "acoustic-drum-kit-pedal-hat-01.mp3"
     };
     /// <summary>The audio output for previewing the instrument.</summary>
-    private WaveOut preview;
+    private WasapiPlayer preview;
 
     /// <summary>The audio reader for previewing the instrument.</summary>
     private AudioFileReader previewReader;
@@ -58,7 +58,7 @@ public partial class FrmInstruments : Form
         try
         {
             previewReader = new AudioFileReader(path);
-            preview = new WaveOut();
+            preview = new WasapiPlayerBuilder().WithSharedMode().Build();
             preview.Init(previewReader);
             preview.Play();
         }

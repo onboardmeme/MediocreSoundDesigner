@@ -107,6 +107,7 @@ public class TrackManager {
         }
         CombineTracks();
         pseudoCombinedTrack.Play(startSample * 4L);
+        hasPlaybackPosition = true;
     }
     /// <summary>
     /// Combining all of the tracks
@@ -117,12 +118,22 @@ public class TrackManager {
         startSample = 0;
         CombineTracks();
         pseudoCombinedTrack.Play();
+        hasPlaybackPosition = true;
     }
 
     private void CombineTracks()
     {
         pseudoCombinedTrack?.Dispose();
         pseudoCombinedTrack = BuildMix();
+    }
+
+    /// <summary>Stops the old mix so the next Play uses the updated clip positions.</summary>
+    public void StopForTimelineEdit()
+    {
+        startSample = PlaybackSamplePosition;
+        pseudoCombinedTrack?.Dispose();
+        pseudoCombinedTrack = null;
+        hasPlaybackPosition = false;
     }
     private Track BuildMix()
     {
@@ -153,9 +164,11 @@ public class TrackManager {
     /// <returns>The pixel number to the right the playhead is</returns>
     public int GetPlayheadPos()
     {
-        if (State == PlaybackState.Stopped) return startSample / DrawTimescale;
-        return pseudoCombinedTrack.GetPlayheadPos() / DrawTimescale;
+        return PlaybackSamplePosition / Math.Max(1, DrawTimescale);
     }
+    /// <summary>Playback position in samples, independent of zoom.</summary>
+    public int PlaybackSamplePosition => hasPlaybackPosition && pseudoCombinedTrack != null ? pseudoCombinedTrack.GetPlayheadPos() : startSample;
+    private bool hasPlaybackPosition;
     private int startSample;
     /// <summary>
     /// Moves the playback position
@@ -163,8 +176,16 @@ public class TrackManager {
     /// <param name="pixel"></param>
     public void SeekTo(int pixel)
     {
-        startSample = pixel * DrawTimescale;
+        SeekToSample((int)Math.Clamp((long)pixel * Math.Max(1, DrawTimescale), 0, int.MaxValue));
+    }
+
+    /// <summary>Seeks using audio time rather than screen coordinates.</summary>
+    public void SeekToSample(int sample)
+    {
+        startSample = Math.Max(0, sample);
         if (State != PlaybackState.Stopped)   // playing or paused: jump right now
             pseudoCombinedTrack.Seek(startSample * 4L, State == PlaybackState.Playing);
+        else
+            hasPlaybackPosition = false;
     }
 }

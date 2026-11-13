@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic.Devices;
+using Microsoft.VisualBasic.Devices;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
@@ -38,7 +38,7 @@ public class Track : IDisposable {
   private float pitch;
   private int channels;
   private AudioFileReader fileReader;
-  private WaveOut outputDevice;
+  private WasapiPlayer outputDevice;
   private Panel panContainer;
   private int drawTimescale;
 
@@ -68,7 +68,7 @@ public class Track : IDisposable {
     end = Math.Clamp(end, start, samples.Length);
     samples = [.. samples[..start], .. samples[end..]];
   }
-  private string tempFilePath => Path.Combine(Path.GetTempPath(), "MediocreSoundDesigner", "temp.wav");
+  private readonly string tempFilePath = Path.Combine(Path.GetTempPath(), "MediocreSoundDesigner", Guid.NewGuid() + ".wav");
   /// <summary>
   /// Wether the track is playing or not
   /// </summary>
@@ -209,59 +209,22 @@ public class Track : IDisposable {
     /// Eliminates silence algorithmically based on the selected region and thres
     /// </summary>
     public void EliminateSilence(SampleRegion region, float minDuration, float thres) {
-    float[] newSamples = CloneSamples();
-    if (region is SampleRegion.BEGINNING_ONLY or SampleRegion.BEGINNING_AND_END) {
-      int silentDurationInNumSamples = 0;
-      for (int i = 0; i < newSamples.Length; i++) {
-        if (Math.Abs(newSamples[i]) <= thres) {
-          silentDurationInNumSamples++;
+        if (!float.IsFinite(minDuration) || minDuration < 0 || !float.IsFinite(thres) || thres < 0)
+            throw new ArgumentException("Silence duration and threshold must be nonnegative numbers.");
+        var result = new List<float>(samples.Length);
+        int i = 0;
+        while (i < samples.Length) {
+            if (Math.Abs(samples[i]) > thres) { result.Add(samples[i++]); continue; }
+            int start = i;
+            while (i < samples.Length && Math.Abs(samples[i]) <= thres) i++;
+            bool eligible = region == SampleRegion.ANYWHERE
+                || (start == 0 && region is SampleRegion.BEGINNING_ONLY or SampleRegion.BEGINNING_AND_END)
+                || (i == samples.Length && region is SampleRegion.END_ONLY or SampleRegion.BEGINNING_AND_END);
+            if (!eligible || (i - start) / (double)sampleRate < minDuration)
+                result.AddRange(samples.AsSpan(start, i - start).ToArray());
         }
-        else {
-          break;
-        }
-      }
-      if ((float)silentDurationInNumSamples / sampleRate >= minDuration) {
-        newSamples = newSamples[silentDurationInNumSamples..];
-      }
+        samples = result.ToArray();
     }
-    if (region is SampleRegion.END_ONLY or SampleRegion.BEGINNING_AND_END) {
-      int silentDurationInNumSamples = 0;
-      for (int i = newSamples.Length - 1; i >= 0; i--) {
-        if (Math.Abs(newSamples[i]) <= thres) {
-          silentDurationInNumSamples++;
-        }
-        else {
-          break;
-        }
-      }
-      if ((float)silentDurationInNumSamples / sampleRate >= minDuration) {
-        newSamples = newSamples[0..^silentDurationInNumSamples];
-      }
-    }
-    if (region is SampleRegion.ANYWHERE) {
-      int silentDurationInNumSamples = 0;
-      int silentRegionStart = 0;
-      int i;
-      for (i = 0; i < newSamples.Length; i++) {
-        if (Math.Abs(newSamples[i]) <= thres) {
-          silentDurationInNumSamples++;
-        }
-        else {
-          if ((float)silentDurationInNumSamples / sampleRate >= minDuration) {
-            newSamples = [..newSamples[0..silentRegionStart], ..newSamples[i..]];
-            i = 0;
-          }
-          silentRegionStart = i + 1;
-          silentDurationInNumSamples = 0;
-        }
-      }
-      if ((float)silentDurationInNumSamples / sampleRate >= minDuration) {
-        newSamples = [.. newSamples[0..silentRegionStart], .. newSamples[i..]];
-      }
-    }
-    samples = newSamples;
-  }
-
     // play
     
     private long startOffsetBytes;   // where in the audio this playback began
@@ -277,7 +240,7 @@ public class Track : IDisposable {
         startBytes = Math.Clamp(startBytes - startBytes % 4, 0, fileReader.Length);  // 4 bytes per float sample
         fileReader.Position = startBytes;
         startOffsetBytes = startBytes;
-        outputDevice = new WaveOut();
+        outputDevice = new WasapiPlayerBuilder().WithSharedMode().Build();
         outputDevice.Init(fileReader);
         outputDevice.Play();
     }
@@ -312,7 +275,9 @@ public class Track : IDisposable {
     /// <returns>The playhead position as the number of samples</returns>
     public int GetPlayheadPos()
     {
-        return (int)(((outputDevice?.GetPosition() ?? 0) + startOffsetBytes) / 4);
+        long playedSamples = outputDevice == null ? 0 :
+            (long)(outputDevice.GetPosition() * 44100.0 / outputDevice.OutputWaveFormat.AverageBytesPerSecond);
+        return (int)Math.Min(int.MaxValue, playedSamples + startOffsetBytes / 4);
     }
     /// <summary>
     /// Switches the true/false value of IsDisabled
@@ -324,16 +289,18 @@ public class Track : IDisposable {
   // file i/o
   private void SaveToTempFile() {
     Directory.CreateDirectory(Path.GetDirectoryName(tempFilePath));
-    using var writer = new WaveFileWriter(tempFilePath, fileReader?.WaveFormat ?? WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
-    writer.WriteSamples(GetAdjustedSamples(), 0, samples.Length);
+    using var writer = new WaveFileWriter(tempFilePath, WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
+    var adjusted = GetAdjustedSamples();
+    writer.WriteSamples(adjusted, 0, adjusted.Length);
   }
     /// <summary>
     /// Saves the track to a hard written file
     /// </summary>
     public void SaveToFile(string path) {
-    Directory.CreateDirectory(Path.GetDirectoryName(path));
-    using var writer = new WaveFileWriter(path, fileReader?.WaveFormat ?? WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
-    writer.WriteSamples(GetAdjustedSamples(), 0, samples.Length);
+    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
+    using var writer = new WaveFileWriter(path, WaveFormat.CreateIeeeFloatWaveFormat(44100, 1));
+    var adjusted = GetAdjustedSamples();
+    writer.WriteSamples(adjusted, 0, adjusted.Length);
   }
   /// <summary>
   /// 
@@ -363,7 +330,8 @@ public class Track : IDisposable {
     /// </summary>
     /// <param name="g">Graphics surface to draw on.</param>
     /// <param name="drawTimescale">How far along the sample is</param>
-    public void DrawSamples(Graphics g, int drawTimescale) {
+  /// <param name="viewportStartSample">Audio sample at the left edge of the visible waveform area.</param>
+    public void DrawSamples(Graphics g, int drawTimescale, long viewportStartSample = 0) {
     if (PanDrawSamples is null) {
       return;
     }
@@ -371,16 +339,16 @@ public class Track : IDisposable {
     this.drawTimescale = drawTimescale;
     float heightAdj = PanDrawSamples.Height / 2;
     if (samples != null && samples.Length > 0) {
-      int x = OffsetSamples / Math.Max(1, drawTimescale);
       Pen pen = new(IsDisabled ? Settings.Color.TrackSamples_Disabled : Settings.Color.TrackSamples_Enabled);
       List<Point> points = new();
-      for (int s = 0; s < samples.Length; s += drawTimescale) {
+      for (int x = 0; x < PanDrawSamples.ClientSize.Width; x++) {
+        long s = viewportStartSample + (long)x * Math.Max(1, drawTimescale) - OffsetSamples;
+        if (s < 0 || s >= samples.Length) continue;
         var sample = (int)(samples[s] * heightAdj * Volume);
         points.Add(new(x, PanDrawSamples.Height / 2));
         points.Add(new(x, PanDrawSamples.Height / 2 - sample));
-        x++;
       }
-      g.DrawLines(pen, points.ToArray());
+      if (points.Count >= 2) g.DrawLines(pen, points.ToArray());
       pen.Dispose();
     }
   }
@@ -392,5 +360,8 @@ public class Track : IDisposable {
     public void Dispose() {
     outputDevice?.Dispose();
     fileReader?.Dispose();
+    try { if (File.Exists(tempFilePath)) File.Delete(tempFilePath); }
+    catch (IOException) { }
+    catch (UnauthorizedAccessException) { }
   }
 }
