@@ -37,6 +37,7 @@ public partial class FrmGenRecord : FrmEditMaster {
     base.Init();
     recordedSamples = new();
     isRecording = false;
+    btnApply.Enabled = false;
     UpdateRecordButton();
   }
 
@@ -66,11 +67,13 @@ public partial class FrmGenRecord : FrmEditMaster {
     if (isRecording) {
       waveSource?.StopRecording();
       isRecording = false;
+      btnRecord.Enabled = false;
       UpdateRecordButton();
     }
     else {
       try {
         isRecording = true;
+        btnApply.Enabled = false;
         UpdateRecordButton();
 
         waveSource = new();
@@ -82,7 +85,11 @@ public partial class FrmGenRecord : FrmEditMaster {
         waveSource.StartRecording();
       }
       catch (Exception ex) {
+        waveSource?.Dispose();
+        waveSource = null;
         isRecording = false;
+        btnRecord.Enabled = true;
+        btnApply.Enabled = recordedSamples.Count > 0;
         UpdateRecordButton();
         MessageBox.Show($"Failed to start recording: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
@@ -110,6 +117,8 @@ public partial class FrmGenRecord : FrmEditMaster {
   // Executed automatically after StopRecording() has completed
   private void WaveSource_RecordingStopped(object sender, StoppedEventArgs e) {
     isRecording = false;
+    btnRecord.Enabled = true;
+    btnApply.Enabled = recordedSamples.Count > 0 && e.Exception == null;
     UpdateRecordButton();
     // Safely dispose of resources in the correct order
     if (waveSource != null) {
@@ -117,7 +126,8 @@ public partial class FrmGenRecord : FrmEditMaster {
       waveSource = null;
     }
 
-    MessageBox.Show("Recording created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    if (e.Exception != null)
+        MessageBox.Show(this, e.Exception.Message, "Recording failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
   }
   /// <summary>
   /// Stops and releases the microphone if the dialog is closed while still recording,

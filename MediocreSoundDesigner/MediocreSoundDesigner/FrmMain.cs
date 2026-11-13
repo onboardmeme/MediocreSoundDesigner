@@ -17,17 +17,43 @@ public partial class FrmMain : Form
     private int waveformLeft;
     private bool updatingTrackLayout;
     private Track selectionTrack;
+    private Track trackMarkedForDeletion;
     private int selectionAnchor;
     private int selectionStart;
     private int selectionEnd;
     private bool selectingAudio;
+    private Track movingClip;
+    private int clipDragX;
+    private int clipOriginalOffset;
+    private int clipDragScale;
+    private const int ClipHandleHeight = 18;
     private bool draggingPlayhead;
+    private long viewportStartSample;
+
+    private void FollowPlayback()
+    {
+        if (trackManager == null || draggingPlayhead || selectingAudio || movingClip != null) return;
+        int scale = Math.Max(1, trackManager.DrawTimescale);
+        int rightEdge = Math.Max(0, panTracks.ClientSize.Width - lblPlayhead.Width);
+        long sample = trackManager.PlaybackSamplePosition;
+        long start = Math.Max(0, viewportStartSample);
+        if (sample < start) start = sample;
+        else if (sample > start + (long)rightEdge * scale) start = Math.Max(0, sample - (long)rightEdge * scale);
+        if (viewportStartSample != start)
+        {
+            viewportStartSample = start;
+            trackManager.RedrawAll();
+        }
+        lblPlayhead.Left = (int)Math.Clamp((sample - start) / scale, 0, rightEdge);
+        lblPlayhead.BringToFront();
+    }
 
 
     private void ClearAudioSelection()
     {
         var oldTrack = selectionTrack;
         selectionTrack = null;
+        trackMarkedForDeletion = null;
         selectingAudio = false;
         selectionStart = selectionEnd = 0;
         UpdateDeleteAudioButton(false);
@@ -36,7 +62,7 @@ public partial class FrmMain : Form
     }
 
     private int SampleAt(Track track, int x) => (int)Math.Clamp(
-        (long)x * Math.Max(1, trackManager.DrawTimescale) - track.OffsetSamples, 0L, track.SampleCount);
+        viewportStartSample + (long)x * Math.Max(1, trackManager.DrawTimescale) - track.OffsetSamples, 0L, track.SampleCount);
 
     private void UpdateAudioSelection(Track track, int x)
     {
@@ -52,6 +78,9 @@ public partial class FrmMain : Form
 
     private void UpdateDeleteAudioButton(bool hasSelection)
     {
+        string action = trackMarkedForDeletion != null ? "Delete Track" : "Delete Selected Audio";
+        btnDeleteAudio.AccessibleName = action;
+        toolbarToolTip.SetToolTip(btnDeleteAudio, action);
         menuDeleteSelectedAudio.Enabled = hasSelection;
         btnDeleteAudio.Enabled = hasSelection;
         btnDeleteAudio.BackColor = hasSelection ? SystemColors.Control : Color.FromArgb(80, 80, 80);
@@ -60,6 +89,11 @@ public partial class FrmMain : Form
 
     private void menuDeleteSelectedAudio_Click(object sender, EventArgs e)
     {
+        if (trackMarkedForDeletion != null)
+        {
+            DeleteTrack(trackMarkedForDeletion);
+            return;
+        }
         if (selectionTrack == null || !trackManager.Tracks.Contains(selectionTrack) || selectionEnd <= selectionStart) return;
         if (MessageBox.Show(this, "Delete the highlighted audio and join the remaining sections? This cannot be undone.",
             "Delete Selected Audio", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
@@ -123,18 +157,24 @@ public partial class FrmMain : Form
         UpdateSizes();
         ApplySettings();
         lblPlayhead.Cursor = Cursors.SizeWE;
-        lblPlayhead.MouseDown += (s, e) => draggingPlayhead = true;
+        lblPlayhead.MouseDown += (s, e) => { if (e.Button == MouseButtons.Left) { draggingPlayhead = true; lblPlayhead.Capture = true; } };
         lblPlayhead.MouseMove += (s, e) =>
         {
             if (!draggingPlayhead) return;
             int x = panTracks.PointToClient(Cursor.Position).X;
-            lblPlayhead.Left = Math.Clamp(x, 0, panTracks.Width - lblPlayhead.Width);
+            lblPlayhead.Left = Math.Clamp(x, 0, Math.Max(0, panTracks.ClientSize.Width - lblPlayhead.Width));
         };
         lblPlayhead.MouseUp += (s, e) =>
         {
             if (!draggingPlayhead) return;
             draggingPlayhead = false;
-            trackManager.SeekTo(lblPlayhead.Left);
+            lblPlayhead.Capture = false;
+            trackManager.SeekToSample((int)Math.Clamp(viewportStartSample + (long)lblPlayhead.Left * Math.Max(1, trackManager.DrawTimescale), 0, int.MaxValue));
+            FollowPlayback();
+        };
+        lblPlayhead.MouseCaptureChanged += (_, _) =>
+        {
+            if (!lblPlayhead.Capture) draggingPlayhead = false;
         };
         Click += (s, e) => ActiveControl = null;
         panTracks.Click += (s, e) => ActiveControl = null;
@@ -164,6 +204,11 @@ public partial class FrmMain : Form
     /// <returns>True if the keystroke was handled, otherwise returns false</returns>
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (keyData == Keys.F1)
+        {
+            btnHelp_Click(this, EventArgs.Empty);
+            return true;
+        }
         if (ActiveControl is TextBoxBase && (keyData == Keys.Enter || keyData == Keys.Escape))
         {
             ActiveControl = null;   // drops focus from the text box
@@ -191,34 +236,34 @@ public partial class FrmMain : Form
             }
             else if (keyData == Keys.Delete)
             {
-                if (trackManager.SelectedTrack is not null)
-                {
-                    if (MessageBox.Show("This will delete the selected track. This is NOT undoable!", "Are You Sure?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation) == DialogResult.Yes)
-                    {
-                        int idx = trackManager.Tracks.IndexOf(trackManager.SelectedTrack);   
-
-                        ClearAudioSelection();
-                        panTracks.Controls.Remove(trackManager.SelectedTrack.PanDrawSamples);
-                        trackManager.SelectedTrack.PanDrawSamples.Dispose();
-                        trackManager.SelectedTrack.Dispose();
-                        trackManager.RemTrack(trackManager.SelectedTrack);
-
-                        if (idx >= 0 && idx < trackHeaders.Count)
-                        {
-                            var h = trackHeaders[idx];
-                            trackHeaders.RemoveAt(idx);
-                            trackHeaders.Add(h);
-                            foreach (var tb in h.Controls.OfType<TextBox>())
-                                tb.Text = "Track 0";    
-                            RenumberHeaders();
-                        }
-                        UpdateSizes();
-                        return true;
-                    }
-                }
+                DeleteTrack(trackManager.SelectedTrack);
+                return true;
             }
         }
         return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    private void DeleteTrack(Track track)
+    {
+        int idx = trackManager.Tracks.IndexOf(track);
+        if (idx < 0) return;
+        if (MessageBox.Show(this, "Delete this entire track? This cannot be undone.", "Delete Track",
+            MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
+        trackManager.StopForTimelineEdit();
+        ClearAudioSelection();
+        panTracks.Controls.Remove(track.PanDrawSamples);
+        track.PanDrawSamples.Dispose();
+        track.Dispose();
+        trackManager.RemTrack(track);
+        if (idx < trackHeaders.Count)
+        {
+            var header = trackHeaders[idx];
+            trackHeaders.RemoveAt(idx);
+            trackHeaders.Add(header);
+            foreach (var name in header.Controls.OfType<TextBox>()) name.Text = "Track 0";
+            RenumberHeaders();
+        }
+        UpdateSizes();
     }
 
     private void FrmMain_SizeChanged(object sender, EventArgs e)
@@ -227,13 +272,20 @@ public partial class FrmMain : Form
         UpdateSizes();
     }
 
+    private void btnHelp_Click(object sender, EventArgs e)
+    {
+        using var guide = new FrmHelp();
+        guide.ShowDialog(this);
+    }
+
     private void btnRestart_Click(object sender, EventArgs e)
     {
         if (trackManager.Tracks.Count == 0) return;
         try
         {
             trackManager.RestartAll();
-            lblPlayhead.Left = 0;
+            viewportStartSample = 0;
+            FollowPlayback();
             btnPlay.BackgroundImage = Resources.pause;
         }
         catch (Exception ex)
@@ -244,6 +296,9 @@ public partial class FrmMain : Form
 
     private void btnPlay_Click(object sender, EventArgs e)
     {
+        if (trackManager.Tracks.Count == 0) return;
+        try
+        {
         if (trackManager.State is NAudio.Wave.PlaybackState.Stopped or NAudio.Wave.PlaybackState.Paused)
         {
             trackManager.PlayAll();
@@ -253,6 +308,11 @@ public partial class FrmMain : Form
         {
             trackManager.PauseAll();
             btnPlay.BackgroundImage = Resources.play;
+        }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Could not play audio", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
@@ -317,6 +377,8 @@ public partial class FrmMain : Form
 
     private void menuFileSave_Click(object sender, EventArgs e)
     {
+        try
+        {
         sfdSaveFile.DefaultExt = "wav";
         if (sfdSaveFile.ShowDialog() == DialogResult.OK)
         {
@@ -331,6 +393,11 @@ public partial class FrmMain : Form
                 Artist = artist,
                 Year = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss")
             }.AppendTo(sfdSaveFile.FileName);
+        }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Could not save audio", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
     private void menuFileSettings_Click(object sender, EventArgs e)
@@ -347,11 +414,13 @@ public partial class FrmMain : Form
     {
         ClearAudioSelection();
         trackManager.SelectedTrack?.Flip();
+        trackManager.SelectedTrack?.PanDrawSamples.Invalidate();
     }
     private void menuEditReverse_Click(object sender, EventArgs e)
     {
         ClearAudioSelection();
         trackManager.SelectedTrack?.Reverse();
+        trackManager.SelectedTrack?.PanDrawSamples.Invalidate();
     }
     private void menuEditVolume_Click(object sender, EventArgs e)
     {
@@ -431,7 +500,7 @@ public partial class FrmMain : Form
         UpdateSizes();
         newTrack.PanDrawSamples.Invalidate();
 
-        FrmGenRecord frm = new();
+        using FrmGenRecord frm = new();
         frm.SetSound(trackManager.SelectedTrack);
         if (frm.ShowDialog() == DialogResult.Cancel)
         {
@@ -439,6 +508,7 @@ public partial class FrmMain : Form
             trackManager.RemTrack(newTrack);
             panTracks.Controls.Remove(newTrack.PanDrawSamples);
             newTrack.PanDrawSamples.Dispose();
+            newTrack.Dispose();
             UpdateSizes();
         }
     }
@@ -515,12 +585,19 @@ public partial class FrmMain : Form
 
     private void tmrUpdatePlaybackState_Tick(object sender, EventArgs e)
     {
+        long samplePosition = trackManager.Tracks.Count == 0 ? 0 : Math.Max(0, trackManager.PlaybackSamplePosition);
+        var elapsed = TimeSpan.FromSeconds(samplePosition / 44100.0);
+        lblPlaybackTime.Text = $"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}.{elapsed.Milliseconds / 10:00}";
+        bool hasTrack = trackManager.SelectedTrack != null && trackManager.Tracks.Contains(trackManager.SelectedTrack);
+        foreach (var button in new[] { btnSaveCurrentTrack, btnRecordAppend, btnFlip, btnReverse, btnVolume, btnPitch, btnEliminateSilence })
+            button.Enabled = hasTrack;
+        btnSaveAudio.Enabled = trackManager.Tracks.Count > 0;
         btnRestart.Enabled = trackManager.Tracks.Count > 0;
         btnPlay.Enabled = trackManager.Tracks.Count > 0;
         if (trackManager.Tracks.Count > 0)
         {
             btnPlay.BackgroundImage = trackManager.State == NAudio.Wave.PlaybackState.Playing ? Resources.pause : Resources.play;
-            if (!draggingPlayhead) lblPlayhead.Left = trackManager.GetPlayheadPos();
+            FollowPlayback();
             lblPlayhead.Visible = true;
         }
         else
@@ -532,7 +609,11 @@ public partial class FrmMain : Form
 
     private void trkDrawTimescale_Scroll(object sender, EventArgs e)
     {
+        long sample = trackManager.PlaybackSamplePosition;
+        int position = lblPlayhead.Left;
         trackManager.DrawTimescale = Math.Max(1, trkDrawTimescale.Maximum - trkDrawTimescale.Value);
+        viewportStartSample = Math.Max(0, sample - (long)position * trackManager.DrawTimescale);
+        FollowPlayback();
         trackManager.RedrawAll();
     }
 
@@ -557,6 +638,22 @@ public partial class FrmMain : Form
             if (e.Button != MouseButtons.Left) return;
             ClearAudioSelection();
             trackManager.SelectTrack(track);
+            long hitSample = viewportStartSample + (long)e.X * Math.Max(1, trackManager.DrawTimescale);
+            if (e.Y < ClipHandleHeight && hitSample >= track.OffsetSamples && hitSample < (long)track.OffsetSamples + track.SampleCount)
+            {
+                selectionTrack = track;
+                trackMarkedForDeletion = track;
+                UpdateDeleteAudioButton(true);
+                lblDebug.Text = "Track selected — click the trash button to delete the entire track, or drag to move.";
+                trackManager.StopForTimelineEdit();
+                movingClip = track;
+                clipDragX = e.X;
+                clipOriginalOffset = track.OffsetSamples;
+                clipDragScale = Math.Max(1, trackManager.DrawTimescale);
+                pan.Cursor = Cursors.SizeWE;
+                pan.Capture = true;
+                return;
+            }
             selectionTrack = track;
             selectionAnchor = SampleAt(track, e.X);
             selectingAudio = true;
@@ -565,10 +662,29 @@ public partial class FrmMain : Form
         };
         pan.MouseMove += (sender, e) =>
         {
+            if (movingClip == track)
+            {
+                track.OffsetSamples = (int)Math.Clamp(clipOriginalOffset + ((long)e.X - clipDragX) * clipDragScale,
+                    0, Math.Max(0L, int.MaxValue - (long)track.SampleCount));
+                lblDebug.Text = $"Clip starts at {track.OffsetSamples / 44100.0:F2}s";
+                pan.Invalidate();
+                return;
+            }
+            long position = viewportStartSample + (long)e.X * Math.Max(1, trackManager.DrawTimescale);
+            pan.Cursor = e.Y < ClipHandleHeight && position >= track.OffsetSamples && position < (long)track.OffsetSamples + track.SampleCount
+                ? Cursors.SizeWE : Cursors.Default;
             if (selectingAudio && selectionTrack == track) UpdateAudioSelection(track, e.X);
         };
         pan.MouseUp += (sender, e) =>
         {
+            if (e.Button == MouseButtons.Left && movingClip == track)
+            {
+                movingClip = null;
+                pan.Capture = false;
+                pan.Cursor = Cursors.Default;
+                pan.Invalidate();
+                return;
+            }
             if (e.Button != MouseButtons.Left || !selectingAudio || selectionTrack != track) return;
             UpdateAudioSelection(track, e.X);
             selectingAudio = false;
@@ -576,7 +692,12 @@ public partial class FrmMain : Form
         };
         pan.MouseCaptureChanged += (sender, e) =>
         {
-            if (!pan.Capture) selectingAudio = false;
+            if (!pan.Capture)
+            {
+                selectingAudio = false;
+                movingClip = null;
+                pan.Cursor = Cursors.Default;
+            }
         };
         pan.DoubleClick += (sender, e) =>
         {
@@ -585,12 +706,23 @@ public partial class FrmMain : Form
         };
         pan.Paint += (sender, e) =>
         {
-            track.DrawSamples(e.Graphics, trackManager.DrawTimescale);
+            track.DrawSamples(e.Graphics, trackManager.DrawTimescale, viewportStartSample);
+            float handleScale = Math.Max(1, trackManager.DrawTimescale);
+            int handleLeft = (int)Math.Clamp(((long)track.OffsetSamples - viewportStartSample) / handleScale, 0, pan.Width);
+            int handleRight = (int)Math.Clamp(((long)track.OffsetSamples + track.SampleCount - viewportStartSample) / handleScale, 0, pan.Width);
+            if (handleRight > handleLeft)
+            {
+                var handle = new Rectangle(handleLeft, 0, handleRight - handleLeft, ClipHandleHeight);
+                using var fill = new SolidBrush(Color.FromArgb(65, 83, 96));
+                e.Graphics.FillRectangle(fill, handle);
+                TextRenderer.DrawText(e.Graphics, "↔ Drag to move", Font, handle, Color.White,
+                    TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            }
             if (selectionTrack == track && selectionEnd > selectionStart)
             {
                 float scale = Math.Max(1, trackManager.DrawTimescale);
-                float left = (track.OffsetSamples + Math.Min(selectionStart, track.SampleCount)) / scale;
-                float right = (track.OffsetSamples + Math.Min(selectionEnd, track.SampleCount)) / scale;
+                float left = (track.OffsetSamples + (long)Math.Min(selectionStart, track.SampleCount) - viewportStartSample) / scale;
+                float right = (track.OffsetSamples + (long)Math.Min(selectionEnd, track.SampleCount) - viewportStartSample) / scale;
                 using var highlight = new SolidBrush(Color.FromArgb(90, Color.DodgerBlue));
                 e.Graphics.FillRectangle(highlight, left, 0, right - left, pan.Height);
             }
@@ -683,7 +815,7 @@ public partial class FrmMain : Form
         trackRows.AutoScrollPosition = new Point(-scroll.X, -scroll.Y);
         trkDrawTimescale.Width = panTracks.Width;
         trkDrawTimescale.Left = trackRows.Left + waveformLeft;
-        lblPlayhead.Left = 0;
+        FollowPlayback();
         lblPlayhead.Height = panTracks.Height;
         lblPlayhead.BringToFront();
         }

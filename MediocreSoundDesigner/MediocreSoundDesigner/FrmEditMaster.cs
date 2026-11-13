@@ -52,10 +52,16 @@ public partial class FrmEditMaster : Form {
   /// <param name="sender"></param>
   /// <param name="e"></param>
   public void btnApply_Click(object sender, EventArgs e) {
+    if (sender is Button button && !button.Enabled) return;
+    try {
     Apply();
     track?.PanDrawSamples?.Invalidate();
     DialogResult = DialogResult.OK;
     Close();
+    }
+    catch (Exception ex) {
+      MessageBox.Show(this, ex.Message, "Could not apply changes", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
   }
 
   // override in subclass if needed
