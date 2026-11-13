@@ -8,6 +8,8 @@ public partial class FrmEditVolume : FrmEditMaster {
     /// </summary>
   public FrmEditVolume() {
     InitializeComponent();
+    DialogTheme.Build(this, "Track Volume", "Adjust the selected track's volume as a percentage.",
+        new[] { ("Volume (%)", (Control)nudVolume) }, btnCancel, btnApply);
   }
     /// <summary>
     /// Opens the dialog box that changes the volume as a percentage

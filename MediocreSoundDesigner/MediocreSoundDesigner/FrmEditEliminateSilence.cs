@@ -8,6 +8,9 @@ public partial class FrmEditEliminateSilence : FrmEditMaster {
   /// </summary>
   public FrmEditEliminateSilence() {
     InitializeComponent();
+    DialogTheme.Build(this, "Remove Silence", "Choose where to remove silence from the selected track.",
+        new[] { ("Region", (Control)cmbWhere), ("Minimum duration (seconds)", (Control)nudMinDuration),
+            ("Silence threshold", (Control)nudThreshold) }, btnCancel, btnApply);
   }
   /// <inheritdoc/>
   protected override void Init() {

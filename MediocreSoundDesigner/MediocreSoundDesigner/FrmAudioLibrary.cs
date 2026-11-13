@@ -14,6 +14,8 @@ public partial class FrmAudioLibrary : Form
         InitializeComponent();
         lstClips.SelectedIndexChanged += (_, _) => UpdateButtons();
         Load += (_, _) => RefreshClips();
+        DialogTheme.Build(this, "Audio Library", "Reuse saved clips or remove sounds you no longer need.",
+            new[] { ("", (Control)lstClips), ("", (Control)lblStatus) }, btnDelete, btnClose, btnAdd);
     }
 
     /// <summary>
